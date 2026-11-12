@@ -1,4 +1,9 @@
-﻿# 跨多多标题工坊 · 电商标题识图生成
+# 跨多多标题工坊 · 电商标题识图生成
+
+[![Release](https://img.shields.io/github/v/release/hztengrui-ux/ecom-title-studio?display_name=tag)](https://github.com/hztengrui-ux/ecom-title-studio/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/hztengrui-ux/ecom-title-studio/total)](https://github.com/hztengrui-ux/ecom-title-studio/releases)
+
+**⬇️ [下载最新桌面版 → Releases](https://github.com/hztengrui-ux/ecom-title-studio/releases/latest)** —— Windows 10/11 x64，免安装；单文件 exe 或 zip 任选，解压后双击 `KuaduoTitleWorkshop.exe`。
 
 上传商品图，识别品类、材质、属性、场景与卖点，按不同平台的规则生成能直接上架的标题与商品描述。
 

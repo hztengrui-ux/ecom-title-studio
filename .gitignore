@@ -1,0 +1,14 @@
+node_modules/
+.tmp/
+.tmp-build/
+.electron-data-launch/
+.npm-cache/
+.electron-cache/
+release/
+public/
+KuaduoTitleWorkshop-data/
+TitleWorkshop-data/
+out-*.png
+*.log
+.DS_Store
+Thumbs.db

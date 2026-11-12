@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1200" role="img" aria-label="轻量便携户外折叠月亮椅示例图">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#C6D6C4"/>
+      <stop offset="0.55" stop-color="#E6E2D0"/>
+      <stop offset="1" stop-color="#F3E8D3"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFF4D8" stop-opacity="0.95"/>
+      <stop offset="0.45" stop-color="#F6DFAE" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#F6DFAE" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#C9B28A"/>
+      <stop offset="1" stop-color="#A88961"/>
+    </linearGradient>
+    <linearGradient id="fabric" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7B8866"/>
+      <stop offset="0.5" stop-color="#5E6D50"/>
+      <stop offset="1" stop-color="#45533C"/>
+    </linearGradient>
+    <linearGradient id="fabricSeat" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#68775A"/>
+      <stop offset="1" stop-color="#3E4B36"/>
+    </linearGradient>
+    <linearGradient id="metal" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#1C211A"/>
+      <stop offset="0.5" stop-color="#4B5044"/>
+      <stop offset="1" stop-color="#181C16"/>
+    </linearGradient>
+    <filter id="blur20"><feGaussianBlur stdDeviation="20"/></filter>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.06"/></feComponentTransfer>
+    </filter>
+    <clipPath id="backClip">
+      <path d="M405 392 Q600 320 795 392 L758 676 Q600 738 442 676 Z"/>
+    </clipPath>
+  </defs>
+
+  <rect width="1200" height="1200" fill="url(#sky)"/>
+  <circle cx="935" cy="225" r="190" fill="url(#sun)"/>
+  <path d="M0 690 C170 600 310 640 470 690 C640 742 780 690 940 642 C1040 612 1120 620 1200 650 L1200 900 L0 900 Z" fill="#9EAF92" opacity="0.55"/>
+  <path d="M0 760 C200 704 360 742 520 782 C720 832 900 790 1200 726 L1200 940 L0 940 Z" fill="#7F9173" opacity="0.45"/>
+  <path d="M0 860 C300 830 780 846 1200 820 L1200 1200 L0 1200 Z" fill="url(#ground)"/>
+  <path d="M0 860 C300 830 780 846 1200 820" fill="none" stroke="#E6D4B4" stroke-opacity="0.45" stroke-width="3"/>
+
+  <ellipse cx="598" cy="928" rx="268" ry="34" fill="#4C3C28" opacity="0.3" filter="url(#blur20)"/>
+
+  <g stroke="url(#metal)" stroke-linecap="round" fill="none">
+    <path d="M392 376 Q600 288 808 376" stroke-width="19"/>
+    <path d="M401 388 L463 826" stroke-width="17"/>
+    <path d="M799 388 L737 826" stroke-width="17"/>
+    <path d="M452 742 L407 948" stroke-width="16"/>
+    <path d="M748 742 L793 948" stroke-width="16"/>
+    <path d="M512 708 L486 944" stroke-width="14"/>
+    <path d="M688 708 L714 944" stroke-width="14"/>
+    <path d="M410 536 L462 690" stroke-width="13"/>
+    <path d="M790 536 L738 690" stroke-width="13"/>
+    <path d="M472 666 L728 666" stroke-width="12"/>
+  </g>
+
+  <path d="M405 392 Q600 320 795 392 L758 676 Q600 738 442 676 Z" fill="url(#fabric)"/>
+  <g clip-path="url(#backClip)">
+    <path d="M462 400 Q470 560 490 708" fill="none" stroke="#A8B393" stroke-opacity="0.18" stroke-width="4"/>
+    <path d="M600 350 L600 720" fill="none" stroke="#2F3A29" stroke-opacity="0.18" stroke-width="4"/>
+    <path d="M730 404 Q720 570 704 706" fill="none" stroke="#A8B393" stroke-opacity="0.14" stroke-width="4"/>
+    <path d="M430 520 Q600 565 772 520" fill="none" stroke="#2F3A29" stroke-opacity="0.12" stroke-width="5"/>
+    <path d="M440 610 Q600 655 762 610" fill="none" stroke="#A8B393" stroke-opacity="0.1" stroke-width="4"/>
+    <path d="M470 360 Q600 320 730 360 L720 440 Q600 405 480 440 Z" fill="#8B9776" opacity="0.55"/>
+  </g>
+
+  <path d="M442 676 Q600 738 758 676 L716 808 Q600 852 484 808 Z" fill="url(#fabricSeat)"/>
+  <path d="M456 690 Q600 742 744 690" fill="none" stroke="#A8B393" stroke-opacity="0.22" stroke-width="4"/>
+  <path d="M492 806 Q600 840 708 806" fill="none" stroke="#2C3727" stroke-opacity="0.3" stroke-width="5"/>
+
+  <path d="M401 388 Q600 304 799 388" fill="none" stroke="#78836A" stroke-opacity="0.35" stroke-width="5"/>
+  <path d="M470 350 Q600 318 730 350" fill="none" stroke="#C5CBB4" stroke-opacity="0.2" stroke-width="3"/>
+
+  <g stroke="#59634B" stroke-linecap="round" opacity="0.7">
+    <path d="M270 930 C280 890 292 868 310 848" stroke-width="4"/>
+    <path d="M300 932 C316 898 334 884 350 874" stroke-width="3"/>
+    <path d="M850 916 C862 880 880 862 902 846" stroke-width="4"/>
+    <path d="M888 924 C908 894 926 882 948 874" stroke-width="3"/>
+  </g>
+  <g fill="#E8D8B8" opacity="0.6">
+    <circle cx="308" cy="846" r="6"/>
+    <circle cx="350" cy="872" r="5"/>
+    <circle cx="902" cy="844" r="6"/>
+    <circle cx="948" cy="872" r="5"/>
+  </g>
+
+  <rect width="1200" height="1200" filter="url(#grain)" opacity="0.55"/>
+</svg>

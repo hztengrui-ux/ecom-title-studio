@@ -1,0 +1,841 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>跨多多标题工坊 · 电商标题识图生成</title>
+  <meta name="description" content="上传一张商品图，按淘宝、拼多多、抖店、京东、TEMU、Amazon 的规则生成可上架标题，带字数控制与合规检查。">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <svg class="sprite" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="i-upload" viewBox="0 0 24 24">
+        <path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>
+      </symbol>
+      <symbol id="i-sparkle" viewBox="0 0 24 24">
+        <path d="M12 3.5l1.7 5.1L19 10.3l-5.3 1.7L12 17l-1.7-5L5 10.3l5.3-1.7L12 3.5Z"/><path d="M18.5 15.5l.7 2.1 2.1.7-2.1.7-.7 2.1-.7-2.1-2.1-.7 2.1-.7.7-2.1Z"/>
+      </symbol>
+      <symbol id="i-copy" viewBox="0 0 24 24">
+        <rect x="8.5" y="8.5" width="11" height="11" rx="2"/><path d="M15.5 8.5v-2a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h2"/>
+      </symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="M4.5 12.5l5 5 10-11"/></symbol>
+      <symbol id="i-star" viewBox="0 0 24 24">
+        <path d="M12 3.8l2.5 5.1 5.6.8-4.1 4 1 5.6-5-2.7-5 2.7 1-5.6-4.1-4 5.6-.8L12 3.8Z"/>
+      </symbol>
+      <symbol id="i-history" viewBox="0 0 24 24">
+        <path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4.5V9h4.5"/><path d="M12 7.5V12l3 2"/>
+      </symbol>
+      <symbol id="i-settings" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4v-.2a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L5.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.6-1H3.8v-4H4a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L5.2 7 8 4.2l.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.6v-.2h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L20.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H22a1.7 1.7 0 0 0-1.6 1Z"/>
+      </symbol>
+      <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4.5 12h15m0 0l-6-6m6 6l-6 6"/></symbol>
+      <symbol id="i-close" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19"/></symbol>
+      <symbol id="i-alert" viewBox="0 0 24 24">
+        <path d="M12 4.5l9 16H3l9-16Z"/><path d="M12 10v4.5"/><path d="M12 17.6v.1"/>
+      </symbol>
+      <symbol id="i-download" viewBox="0 0 24 24">
+        <path d="M12 4v12m0 0l-4.5-4.5M12 16l4.5-4.5"/><path d="M4.5 19.5h15"/>
+      </symbol>
+      <symbol id="i-refresh" viewBox="0 0 24 24">
+        <path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4.5V9h-4.5"/>
+      </symbol>
+      <symbol id="i-image" viewBox="0 0 24 24">
+        <rect x="3.5" y="4.5" width="17" height="15" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="M4 17l5-5 4 4 3-3 4 4"/>
+      </symbol>
+      <symbol id="i-folder" viewBox="0 0 24 24">
+        <path d="M3.5 6.5a2 2 0 0 1 2-2h4l2 2.2h7a2 2 0 0 1 2 2v9.8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z"/><path d="M3.8 10h16.4"/>
+      </symbol>
+      <symbol id="i-layer" viewBox="0 0 24 24">
+        <path d="M12 3.5l8.5 4.3L12 12 3.5 7.8 12 3.5Z"/><path d="M4 12l8 4 8-4M4 16l8 4 8-4"/>
+      </symbol>
+      <symbol id="i-chevron" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
+      <symbol id="i-trash" viewBox="0 0 24 24">
+        <path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l.8 12.5h9.4L17.5 7M10 10.5v6M14 10.5v6"/>
+      </symbol>
+      <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.8 12S6.5 5.8 12 5.8 21.2 12 21.2 12 17.5 18.2 12 18.2 2.8 12 2.8 12Z"/><circle cx="12" cy="12" r="2.7"/></symbol>
+      <symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M4 4l16 16M9.8 6.2A9.7 9.7 0 0 1 12 5.8c5.5 0 9.2 6.2 9.2 6.2a16 16 0 0 1-2.4 3.2M6.2 8.1A15.6 15.6 0 0 0 2.8 12S6.5 18.2 12 18.2c1 0 1.9-.2 2.7-.6"/></symbol>
+      <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8.5 10V7.5a3.5 3.5 0 0 1 7 0V10"/></symbol>
+      <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5"/><path d="M12 7.8v.1"/></symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+      <symbol id="i-wand" viewBox="0 0 24 24">
+        <path d="M4 20L16 8"/><path d="M14 4l1 2 2 1-2 1-1 2-1-2-2-1 2-1 1-2Z"/><path d="M19 12l.7 1.3L21 14l-1.3.7L19 16l-.7-1.3L17 14l1.3-.7L19 12Z"/>
+      </symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    </defs>
+  </svg>
+
+  <div class="app">
+    <aside class="rail" aria-label="主导航">
+      <a class="brand" href="/" aria-label="跨多多标题工坊首页">
+        <span class="brand-glyph">题</span>
+        <span class="brand-word">KUADUO<br>TITLE</span>
+      </a>
+
+      <nav class="rail-nav">
+        <button type="button" class="rail-item is-active" data-nav="studio" aria-current="page">
+          <svg class="ico" aria-hidden="true"><use href="#i-sparkle"></use></svg>
+          <span>工作台</span>
+        </button>
+        <button type="button" class="rail-item" data-nav="history">
+          <svg class="ico" aria-hidden="true"><use href="#i-history"></use></svg>
+          <span>历史</span>
+          <em class="rail-count" id="historyCount">0</em>
+        </button>
+      </nav>
+
+      <div class="rail-bottom">
+        <button type="button" class="rail-item" data-nav="help">
+          <svg class="ico" aria-hidden="true"><use href="#i-info"></use></svg>
+          <span>说明</span>
+        </button>
+        <button type="button" class="rail-item" data-nav="settings">
+          <svg class="ico" aria-hidden="true"><use href="#i-settings"></use></svg>
+          <span>设置</span>
+        </button>
+        <div class="rail-avatar" title="本地工作台">TW</div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="crumbs">
+          <a class="topbar-brand" href="/" aria-label="跨多多标题工坊">
+            <span class="topbar-brand-glyph">题</span>
+          </a>
+          <span class="crumb-root">跨多多标题工坊</span>
+          <svg class="ico crumb-arrow" aria-hidden="true"><use href="#i-chevron"></use></svg>
+          <strong id="crumbCurrent">新建任务</strong>
+        </div>
+        <div class="topbar-right">
+          <button type="button" class="model-pill" id="modelPill" data-tone="demo" title="点击配置模型">
+            <i aria-hidden="true"></i>
+            <span id="modelPillText">演示模式</span>
+          </button>
+          <span class="topbar-sep" aria-hidden="true"></span>
+          <button type="button" class="icon-btn" id="settingsBtn" aria-label="打开模型设置">
+            <svg class="ico" aria-hidden="true"><use href="#i-settings"></use></svg>
+          </button>
+          <span class="topbar-sep" aria-hidden="true"></span>
+          <nav class="top-menu" id="topMenu" aria-label="应用菜单">
+            <div class="top-menu-item" data-menu="file">
+              <button type="button" class="top-menu-trigger" aria-haspopup="true" aria-expanded="false">文件</button>
+              <div class="top-menu-dropdown" role="menu">
+                <button type="button" role="menuitem" data-menu-action="open-output">打开输出文件夹</button>
+                <button type="button" role="menuitem" data-menu-action="open-data">打开应用数据文件夹</button>
+                <span class="top-menu-sep"></span>
+                <button type="button" role="menuitem" data-menu-action="quit">退出</button>
+              </div>
+            </div>
+            <div class="top-menu-item" data-menu="edit">
+              <button type="button" class="top-menu-trigger" aria-haspopup="true" aria-expanded="false">编辑</button>
+              <div class="top-menu-dropdown" role="menu">
+                <button type="button" role="menuitem" data-menu-action="undo">撤销</button>
+                <button type="button" role="menuitem" data-menu-action="redo">重做</button>
+                <span class="top-menu-sep"></span>
+                <button type="button" role="menuitem" data-menu-action="cut">剪切</button>
+                <button type="button" role="menuitem" data-menu-action="copy">复制</button>
+                <button type="button" role="menuitem" data-menu-action="paste">粘贴</button>
+                <button type="button" role="menuitem" data-menu-action="select-all">全选</button>
+              </div>
+            </div>
+            <div class="top-menu-item" data-menu="view">
+              <button type="button" class="top-menu-trigger" aria-haspopup="true" aria-expanded="false">视图</button>
+              <div class="top-menu-dropdown" role="menu">
+                <button type="button" role="menuitem" data-menu-action="reload">重新加载</button>
+                <span class="top-menu-sep"></span>
+                <button type="button" role="menuitem" data-menu-action="reset-zoom">实际大小</button>
+                <button type="button" role="menuitem" data-menu-action="zoom-in">放大</button>
+                <button type="button" role="menuitem" data-menu-action="zoom-out">缩小</button>
+                <span class="top-menu-sep"></span>
+                <button type="button" role="menuitem" data-menu-action="fullscreen">全屏</button>
+                <button type="button" role="menuitem" data-menu-action="devtools">开发者工具</button>
+              </div>
+            </div>
+            <div class="top-menu-item" data-menu="help">
+              <button type="button" class="top-menu-trigger" aria-haspopup="true" aria-expanded="false">帮助</button>
+              <div class="top-menu-dropdown" role="menu">
+                <button type="button" role="menuitem" data-menu-action="about">关于跨多多标题工坊</button>
+              </div>
+            </div>
+          </nav>
+        </div>
+      </header>
+
+      <div class="workspace">
+        <section class="brief-col" aria-labelledby="briefTitle">
+          <div class="brief-scroll">
+          <header class="col-head">
+            <div class="step-line">
+              <span class="step-no">01</span><span class="step-label">商品输入</span>
+              <div class="mode-switch" id="modeSwitch" role="tablist" aria-label="生成模式">
+                <button type="button" class="is-active" data-mode="single" role="tab" aria-selected="true">单张</button>
+                <button type="button" data-mode="batch" role="tab" aria-selected="false">批量</button>
+              </div>
+            </div>
+            <h1 id="briefTitle">一张商品图，<br><em>写出六种平台语气。</em></h1>
+            <p class="lede">识别主体与卖点，按平台规则收束字数，直接得到能上架的标题。</p>
+          </header>
+
+          <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="上传商品图，支持点击、拖拽或粘贴">
+            <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" hidden>
+            <div class="drop-empty" id="dropEmpty">
+              <span class="drop-icon"><svg class="ico" aria-hidden="true"><use href="#i-upload"></use></svg></span>
+              <strong id="dropTitle">拖入商品图，或点击上传</strong>
+              <span id="dropHint">JPG / PNG / WebP · 建议 800px 以上</span>
+              <kbd id="dropKbd">Ctrl V</kbd>
+            </div>
+            <div class="drop-preview" id="dropPreview" hidden>
+              <img id="previewImg" alt="商品图预览">
+              <div class="preview-scrim" aria-hidden="true"></div>
+              <div class="preview-meta"><span id="previewDims"></span><span id="previewSize"></span></div>
+              <button type="button" class="preview-change" id="changeImage">更换图片</button>
+              <button type="button" class="preview-remove" id="removeImage" aria-label="移除图片">
+                <svg class="ico" aria-hidden="true"><use href="#i-close"></use></svg>
+              </button>
+              <div class="scan-line" id="scanLine" aria-hidden="true"></div>
+            </div>
+          </div>
+
+          <div class="batch-import" id="batchImport" hidden>
+            <input type="file" id="folderInput" webkitdirectory directory multiple hidden>
+            <input type="file" id="batchFileInput" accept="image/jpeg,image/png,image/webp" multiple hidden>
+            <div class="batch-import-actions">
+              <button type="button" class="outline-btn" id="pickFolderBtn">
+                <svg class="ico" aria-hidden="true"><use href="#i-folder"></use></svg>
+                选择文件夹
+              </button>
+              <button type="button" class="ghost-btn" id="pickBatchFilesBtn">选择图片</button>
+              <button type="button" class="text-btn" id="loadSampleBatchBtn">载入示例批次</button>
+            </div>
+            <div class="batch-mini" id="batchMini">
+              <span>尚未导入图片。</span>
+              <small>支持整文件夹，不限张数。</small>
+            </div>
+          </div>
+
+          <div class="sample-row">
+            <div class="sample-label"><span>没有素材？</span><strong>试试示例</strong></div>
+            <div class="sample-list" id="sampleList" role="list"></div>
+          </div>
+
+          <div class="choice-block">
+            <div class="choice-head"><span>发布平台</span><small>可多选</small></div>
+            <div class="chip-row" id="platformChips" role="group" aria-label="发布平台"></div>
+          </div>
+
+          <div class="choice-block">
+            <div class="choice-head"><span>标题策略</span><small>最多 3 个</small></div>
+            <div class="chip-row" id="strategyChips" role="group" aria-label="标题策略"></div>
+          </div>
+
+          <button type="button" class="rules-summary" id="rulesSummaryBtn">
+            <span class="rules-summary-icon"><svg class="ico" aria-hidden="true"><use href="#i-settings"></use></svg></span>
+            <span class="rules-summary-main">
+              <strong>生成规则</strong>
+              <small id="rulesSummaryText">中文 12–30 字 · 描述 60–120 字</small>
+            </span>
+            <svg class="ico rules-summary-arrow" aria-hidden="true"><use href="#i-chevron"></use></svg>
+          </button>
+
+          <div class="brief-fields">
+            <div class="field-grid">
+              <label class="field">
+                <span>主题 / 品类 <em>可选</em></span>
+                <input id="categoryInput" maxlength="40" placeholder="如：哥特、花卉、圣诞；也可填品类" autocomplete="off">
+              </label>
+              <label class="field">
+                <span>品牌 <em>可选</em></span>
+                <input id="brandInput" maxlength="30" placeholder="没有就留空" autocomplete="off">
+              </label>
+            </div>
+            <label class="field">
+              <span>目标类目 <em>不选则通用素材，不写行业词</em></span>
+              <select id="targetCategorySelect">
+                <option value="generic">通用素材（默认）</option>
+                <option value="apparel">服装 / 印花</option>
+                <option value="home">家居 / 装饰画</option>
+                <option value="drinkware">杯具 / 餐具</option>
+                <option value="stationery">文具 / 贴纸</option>
+                <option value="custom">其他 / 自定义</option>
+              </select>
+            </label>
+            <label class="field" id="customCategoryWrap" hidden>
+              <span>自定义类目</span>
+              <input id="customCategoryInput" maxlength="40" placeholder="例如：手机壳 / 壁纸" autocomplete="off">
+            </label>
+            <label class="field">
+              <span>画面元素 / 卖点 <em>可选</em></span>
+              <input id="sellingInput" maxlength="300" placeholder="主体、颜色、构图、风格…用顿号分隔" autocomplete="off">
+            </label>
+            <label class="field">
+              <span>适用素材 / 人群 <em>可选</em></span>
+              <input id="audienceInput" maxlength="100" placeholder="如：印花、贴纸、布料；或目标人群" autocomplete="off">
+            </label>
+          </div>
+
+          </div>
+
+          <div class="generate-wrap" id="generateWrap">
+            <button type="button" class="generate-btn" id="generateBtn">
+              <span class="btn-spark"><svg class="ico" aria-hidden="true"><use href="#i-sparkle"></use></svg></span>
+              <span class="btn-text">生成标题</span>
+              <span class="btn-meta" id="generateMeta">淘宝 · TEMU / 6 条</span>
+              <kbd>⌘↵</kbd>
+            </button>
+            <p class="privacy-note">
+              <svg class="ico" aria-hidden="true"><use href="#i-lock"></use></svg>
+              图片只发送到你配置的模型服务；记录保存在本机，可随时清空。
+            </p>
+          </div>
+        </section>
+
+        <section class="result-col" aria-labelledby="resultHeading">
+          <header class="result-head">
+            <div>
+              <div class="step-line"><span class="step-no">02</span><span class="step-label">生成结果</span></div>
+              <h2 id="resultHeading">等待一张商品图</h2>
+              <p class="result-sub" id="resultSub">上传后约 15–40 秒，具体取决于模型速度。</p>
+            </div>
+            <div class="result-tools" id="resultTools" hidden>
+              <button type="button" class="ghost-btn" id="regenerateBtn">
+                <svg class="ico" aria-hidden="true"><use href="#i-refresh"></use></svg>
+                换一批
+              </button>
+              <button type="button" class="ghost-btn" id="exportBtn">
+                <svg class="ico" aria-hidden="true"><use href="#i-download"></use></svg>
+                导出
+              </button>
+            </div>
+          </header>
+
+          <div class="result-body" id="resultBody">
+            <div class="empty-state" id="emptyState">
+              <span class="empty-watermark" aria-hidden="true">Aa</span>
+              <div class="specimen">
+                <div class="specimen-top">
+                  <span>TITLE SPECIMEN · NO.01</span>
+                  <span>淘宝 / 24 字</span>
+                </div>
+                <p class="specimen-title">手作感釉下彩马克杯 350ml 微波炉可用咖啡杯</p>
+                <div class="specimen-tags"><span>核心词前置</span><span>属性具体</span><span>场景可感</span></div>
+              </div>
+              <div class="bad-title">
+                <span>别这样写</span>
+                <s>最好用的神仙杯子全网最低</s>
+                <em>极限词 · 信息空 · 无品类词</em>
+              </div>
+              <div class="voice-strip" aria-label="不同平台的标题语气">
+                <div><span>淘宝</span><em>搜索词覆盖</em></div>
+                <div><span>拼多多</span><em>利益点直给</em></div>
+                <div><span>抖店</span><em>画面与人群</em></div>
+                <div><span>京东</span><em>参数与规格</em></div>
+                <div><span>TEMU</span><em>自然英文</em></div>
+                <div><span>Amazon</span><em>核心词 + 场景</em></div>
+              </div>
+              <ol class="empty-steps">
+                <li><span>01</span><div><strong>上传商品图</strong><small>主体清晰，背景干净</small></div></li>
+                <li><span>02</span><div><strong>选择平台</strong><small>可同时生成六个平台</small></div></li>
+                <li><span>03</span><div><strong>复制上架</strong><small>字数与风险词已检查</small></div></li>
+              </ol>
+            </div>
+
+            <div class="loading-state" id="loadingState" hidden>
+              <div class="loading-card">
+                <div class="loading-visual">
+                  <img id="loadingImg" alt="">
+                  <span class="loading-scan" aria-hidden="true"></span>
+                  <span class="loading-corner tl" aria-hidden="true"></span>
+                  <span class="loading-corner tr" aria-hidden="true"></span>
+                  <span class="loading-corner bl" aria-hidden="true"></span>
+                  <span class="loading-corner br" aria-hidden="true"></span>
+                </div>
+                <div class="loading-copy">
+                  <span class="eyebrow">READING THE IMAGE</span>
+                  <h3 id="loadingTitle">正在看材质与轮廓…</h3>
+                  <p id="loadingSub">先确认品类，再拆解卖点与场景。</p>
+                  <ol class="loading-steps" id="loadingSteps">
+                    <li data-step="0"><i></i><span>识别主体与品类</span></li>
+                    <li data-step="1"><i></i><span>提取材质、属性与卖点</span></li>
+                    <li data-step="2"><i></i><span>按平台规则收束字数</span></li>
+                    <li data-step="3"><i></i><span>检查极限词与可读性</span></li>
+                  </ol>
+                  <div class="loading-time"><svg class="ico" aria-hidden="true"><use href="#i-clock"></use></svg><span id="elapsed">00:00</span><em>不要关闭页面</em></div>
+                </div>
+              </div>
+              <div class="skeleton-list" aria-hidden="true">
+                <div class="skeleton-card"><span></span><b></b><b></b></div>
+                <div class="skeleton-card"><span></span><b></b><b></b></div>
+              </div>
+            </div>
+
+            <div class="error-state" id="errorState" hidden>
+              <div class="error-card">
+                <span class="error-icon"><svg class="ico" aria-hidden="true"><use href="#i-alert"></use></svg></span>
+                <div>
+                  <span class="eyebrow">SOMETHING WENT WRONG</span>
+                  <h3 id="errorTitle">生成没有完成</h3>
+                  <p id="errorMessage">请检查模型设置后重试。</p>
+                  <details class="error-detail" id="errorDetailWrap" hidden>
+                    <summary>查看技术细节</summary>
+                    <pre id="errorDetail"></pre>
+                  </details>
+                  <div class="error-actions">
+                    <button type="button" class="primary-btn" id="retryBtn">重试</button>
+                    <button type="button" class="text-btn" id="errorSettingsBtn">打开设置</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="result-content" id="resultContent" hidden>
+              <div class="demo-banner" id="demoBanner" hidden>
+                <svg class="ico" aria-hidden="true"><use href="#i-info"></use></svg>
+                <span id="demoText"></span>
+                <button type="button" id="demoConfigBtn">配置模型</button>
+              </div>
+
+              <article class="insight-card" id="insightCard"></article>
+
+              <div class="platform-tabs" id="platformTabs" role="tablist" aria-label="平台标题"></div>
+              <p class="list-meta" id="listMeta"></p>
+              <div class="title-list" id="titleList"></div>
+
+              <section class="panel description-panel" id="descriptionPanel"></section>
+
+              <div class="result-lower">
+                <section class="panel keywords-panel" id="keywordsPanel"></section>
+                <section class="panel compliance-panel" id="compliancePanel"></section>
+              </div>
+
+              <footer class="result-foot">
+                <span id="resultFootNote">标题由 AI 生成，上架前请核对实物信息与平台规则。</span>
+                <span id="resultModel"></span>
+              </footer>
+            </div>
+
+            <div class="batch-view" id="batchView" hidden>
+              <div class="batch-toolbar">
+                <div class="batch-heading">
+                  <span class="eyebrow">BATCH QUEUE</span>
+                  <h3>实时队列</h3>
+                  <p id="batchSummaryText">导入文件夹，队列会逐张识别并匹配标题。</p>
+                </div>
+                <div class="batch-actions">
+                  <button type="button" class="primary-btn" id="batchStartBtn">开始处理</button>
+                  <button type="button" class="ghost-btn" id="batchPreprocessBtn">预处理</button>
+                  <button type="button" class="ghost-btn" id="batchStopBtn" hidden>停止</button>
+                  <button type="button" class="ghost-btn" id="batchPreviewBtn">预览文件夹</button>
+                  <button type="button" class="ghost-btn" id="batchExcelBtn">导出已选 Excel</button>
+                  <button type="button" class="ghost-btn" id="batchCsvBtn">导出已选 CSV</button>
+                  <button type="button" class="ghost-btn" id="batchFolderBtn">保存已选到文件夹</button>
+                  <button type="button" class="ghost-btn" id="batchClearBtn">清空</button>
+                </div>
+              </div>
+
+              <div class="batch-filter-row">
+                <label class="batch-filter">
+                  <svg class="ico" aria-hidden="true"><use href="#i-search"></use></svg>
+                  <input id="batchFilterInput" placeholder="按图片文件名 / SKU 筛选" autocomplete="off">
+                </label>
+                <button type="button" class="text-btn" id="batchFilterClear" hidden>清空筛选</button>
+                <span id="batchFilterCount"></span>
+              </div>
+
+              <div class="batch-progress"><i id="batchProgressBar"></i></div>
+              <div class="batch-stats" id="batchStats"></div>
+              <div class="batch-preprocess-status" id="batchPreprocessStatus" hidden></div>
+
+              <label class="batch-name-field">
+                <span>Excel / 文件夹名称</span>
+                <input id="batchFileName" maxlength="80" placeholder="跨多多标题工坊-批量">
+              </label>
+
+              <details class="batch-settings" id="batchSettings">
+                <summary>
+                  <span>批量设置</span>
+                  <small>前缀 / 后缀 · 并发 · 图片预处理 · 自定义提示词</small>
+                </summary>
+                <div class="batch-settings-grid">
+                  <label class="field batch-mode-field">
+                    <span>标题类型</span>
+                    <select id="batchAssetMode">
+                      <option value="asset">素材描述（服装/印花，不写行业词）</option>
+                      <option value="product">商品标题（按品类/场景）</option>
+                    </select>
+                  </label>
+                  <label class="field">
+                    <span>标题前缀 <em>保存后固定生效</em></span>
+                    <input id="batchPrefix" maxlength="24" placeholder="可选，例如：圣诞款">
+                  </label>
+                  <label class="field">
+                    <span>标题后缀 <em>保存后固定生效</em></span>
+                    <input id="batchSuffix" maxlength="24" placeholder="可选，例如：现货">
+                  </label>
+                  <label class="field">
+                    <span>并发数 <em>自动按 CPU / 内存，2–8</em></span>
+                    <select id="batchConcurrency">
+                      <option value="auto">自动（推荐）</option>
+                      <option value="1">1 张 / 次（最稳）</option>
+                      <option value="2">2 张 / 次</option>
+                      <option value="3">3 张 / 次</option>
+                      <option value="5">5 张 / 次</option>
+                      <option value="8">8 张 / 次</option>
+                      <option value="12">12 张 / 次</option>
+                      <option value="20">20 张 / 次（最快，易限流）</option>
+                    </select>
+                  </label>
+                  <label class="field">
+                    <span>缩放方式</span>
+                    <select id="batchResizeMode">
+                      <option value="width">按宽度等比</option>
+                      <option value="longest">按最长边</option>
+                    </select>
+                  </label>
+                  <label class="field">
+                    <span>目标尺寸 <em>px · 可选可填</em></span>
+                    <input id="batchImageEdge" type="number" min="320" max="4096" step="1" list="batchImageEdgePresets" inputmode="numeric">
+                    <datalist id="batchImageEdgePresets">
+                      <option value="548"></option>
+                      <option value="640"></option>
+                      <option value="768"></option>
+                      <option value="1024"></option>
+                      <option value="1280"></option>
+                      <option value="1600"></option>
+                      <option value="2048"></option>
+                    </datalist>
+                  </label>
+                  <label class="field">
+                    <span>目标长度 <em>0 = 平台默认</em></span>
+                    <input id="batchTargetLength" type="number" min="0" max="200" step="1" value="0" inputmode="numeric">
+                  </label>
+                  <label class="field">
+                    <span>标题语言</span>
+                    <select id="batchLanguage">
+                      <option value="auto">跟随平台</option>
+                      <option value="zh">中文</option>
+                      <option value="en">English</option>
+                    </select>
+                  </label>
+                  <label class="field batch-prompt-field">
+                    <span>禁用关键词 <em>每行一个，标题和描述都会检测</em></span>
+                    <textarea id="batchBannedWords" rows="2" placeholder="例如：全网最低&#10;绝对安全"></textarea>
+                  </label>
+                  <label class="field batch-prompt-field">
+                    <span>提示词模板</span>
+                    <select id="batchPromptPreset">
+                      <option value="standard">标准电商：材质 / 场景 / 人群</option>
+                      <option value="festival">节日礼赠：图案 / 氛围 / 送礼</option>
+                      <option value="param">参数优先：材质 / 尺寸 / 容量</option>
+                      <option value="brand">品牌调性：克制 / 高级 / 不夸张</option>
+                      <option value="custom">自定义</option>
+                    </select>
+                  </label>
+                  <label class="field batch-prompt-field">
+                    <span>自定义提示词</span>
+                    <textarea id="batchCustomPrompt" rows="2" placeholder="例如：突出圣诞图案、红黑格纹与礼赠场景，不要写价格和销量。"></textarea>
+                  </label>
+                  <div class="field batch-output-dir">
+                    <span>保存位置 <em>不选则保存时再选</em></span>
+                    <div class="batch-dir-row">
+                      <input id="batchOutputDir" readonly placeholder="默认：保存时选择文件夹">
+                      <button type="button" class="ghost-btn" id="batchChooseDir">选择</button>
+                    </div>
+                  </div>
+                  <label class="batch-check">
+                    <input type="checkbox" id="batchSaveOriginals" checked>
+                    <span>保存原图到结果文件夹</span>
+                  </label>
+                </div>
+                <div class="batch-settings-foot">
+                  <button type="button" class="text-btn" id="batchSaveSettingsBtn">保存这些设置</button>
+                  <button type="button" class="text-btn" id="batchRulesBtn">标题长度 / 禁用词 / 必含词 →</button>
+                  <span>输出：Excel / CSV · 原图可选 · HTML 预览</span>
+                </div>
+                <div class="batch-template-row">
+                  <span>复用模板</span>
+                  <button type="button" class="ghost-btn" id="batchSaveTemplateBtn">存为模板</button>
+                  <button type="button" class="ghost-btn" id="batchLoadTemplateBtn">载入模板</button>
+                  <input type="file" id="templateFileInput" accept=".json,application/json" hidden>
+                  <small>JSON 文件，可存到任意盘</small>
+                </div>
+              </details>
+
+              <div class="batch-live" id="batchLive"></div>
+              <div class="batch-list" id="batchList"></div>
+
+              <div class="batch-empty" id="batchEmpty">
+                <span class="batch-empty-icon"><svg class="ico" aria-hidden="true"><use href="#i-layer"></use></svg></span>
+                <h3>把一批商品图放进来</h3>
+                <p>支持选择整个文件夹，队列会逐张处理。每完成一张，右侧会实时出现它的关键词、标题和描述；最后可导出 Excel，或直接保存到指定文件夹。</p>
+                <div class="batch-empty-actions">
+                  <button type="button" class="outline-btn" id="emptyPickFolderBtn">
+                    <svg class="ico" aria-hidden="true"><use href="#i-folder"></use></svg>
+                    选择文件夹
+                  </button>
+                  <button type="button" class="ghost-btn" id="emptyLoadSamplesBtn">载入 4 个示例</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div class="batch-preview-modal" id="batchPreviewModal" hidden>
+    <div class="batch-preview-dialog" role="dialog" aria-modal="true" aria-labelledby="batchPreviewTitle">
+      <header class="batch-preview-head">
+        <div>
+          <span class="eyebrow">FOLDER PREVIEW</span>
+          <h2 id="batchPreviewTitle">文件夹效果预览</h2>
+          <p id="batchPreviewSummary"></p>
+        </div>
+        <button type="button" class="icon-btn" id="batchPreviewClose" aria-label="关闭预览">
+          <svg class="ico" aria-hidden="true"><use href="#i-close"></use></svg>
+        </button>
+      </header>
+      <div class="batch-preview-body">
+        <aside class="batch-preview-tree" id="batchPreviewTree"></aside>
+        <iframe class="batch-preview-frame" id="batchPreviewFrame" title="批量结果预览"></iframe>
+      </div>
+      <footer class="batch-preview-foot">
+        <span>这里只是预览，不会写入磁盘</span>
+        <button type="button" class="ghost-btn" id="batchPreviewExcelBtn">导出已选 Excel</button>
+        <button type="button" class="ghost-btn" id="batchPreviewSaveBtn">保存这个文件夹</button>
+      </footer>
+    </div>
+  </div>
+
+  <div class="drawer-backdrop" id="drawerBackdrop" hidden></div>
+
+  <aside class="drawer" id="settingsDrawer" aria-hidden="true" aria-labelledby="settingsTitle">
+    <header class="drawer-head">
+      <div>
+        <span class="eyebrow">MODEL CONNECTION</span>
+        <h2 id="settingsTitle">模型设置</h2>
+      </div>
+      <button type="button" class="icon-btn" id="closeSettings" aria-label="关闭设置">
+        <svg class="ico" aria-hidden="true"><use href="#i-close"></use></svg>
+      </button>
+    </header>
+    <div class="drawer-scroll">
+      <p class="drawer-intro">连接任意 OpenAI 兼容的视觉模型。密钥只保存在本机，不会写入项目文件。</p>
+
+      <div class="preset-grid" id="presetGrid" role="group" aria-label="模型服务预设"></div>
+      <p class="preset-legend"><strong>视觉</strong> 默认模型支持图片输入 · <strong>看模型</strong> 取决于你填的模型 ID · <strong>示例</strong> 只跑内置示例</p>
+
+      <button type="button" class="rules-entry" id="openRulesFromSettings">
+        <span><strong>生成规则</strong><small>标题 / 描述字数、必含词、禁用词、关键词组合</small></span>
+        <svg class="ico" aria-hidden="true"><use href="#i-chevron"></use></svg>
+      </button>
+
+      <div class="settings-fields">
+        <label class="field">
+          <span>接口地址</span>
+          <input id="baseUrlInput" placeholder="https://api.example.com/v1" autocomplete="off" spellcheck="false">
+        </label>
+        <label class="field">
+          <span>模型名称</span>
+          <input id="modelInput" placeholder="例如 qwen-vl-max-latest" autocomplete="off" spellcheck="false">
+          <small class="field-hint" id="modelHint" hidden></small>
+        </label>
+        <label class="field">
+          <span>API Key</span>
+          <div class="key-wrap">
+            <input id="apiKeyInput" type="password" placeholder="sk-…" autocomplete="off" spellcheck="false">
+            <button type="button" id="toggleKey" aria-label="显示或隐藏密钥">
+              <svg class="ico" aria-hidden="true"><use href="#i-eye"></use></svg>
+            </button>
+          </div>
+        </label>
+      </div>
+
+      <details class="advanced">
+        <summary>高级参数</summary>
+        <label class="range-field">
+          <span>创造性 <output id="tempOutput">0.65</output></span>
+          <input type="range" id="temperatureInput" min="0" max="1" step="0.05" value="0.65">
+          <small>更高更容易写出新角度，也更可能偏离实物。</small>
+        </label>
+      </details>
+
+      <div class="test-row">
+        <button type="button" class="outline-btn" id="testBtn">测试连接</button>
+        <span class="test-result" id="testResult" aria-live="polite"></span>
+      </div>
+
+      <div class="env-hint">
+        <svg class="ico" aria-hidden="true"><use href="#i-info"></use></svg>
+        也可以不填密钥，改用环境变量 <code>VISION_BASE_URL</code>、<code>VISION_API_KEY</code>、<code>VISION_MODEL</code> 启动。
+      </div>
+    </div>
+    <footer class="drawer-foot">
+      <button type="button" class="text-btn" id="useDemoBtn">先用示例体验</button>
+      <button type="button" class="primary-btn" id="saveSettingsBtn">保存设置</button>
+    </footer>
+  </aside>
+
+  <aside class="drawer rules-drawer" id="rulesDrawer" aria-hidden="true" aria-labelledby="rulesTitle">
+    <header class="drawer-head">
+      <div>
+        <span class="eyebrow">GENERATION RULES</span>
+        <h2 id="rulesTitle">生成规则</h2>
+      </div>
+      <button type="button" class="icon-btn" id="closeRules" aria-label="关闭生成规则">
+        <svg class="ico" aria-hidden="true"><use href="#i-close"></use></svg>
+      </button>
+    </header>
+    <div class="drawer-scroll">
+      <p class="drawer-intro">这些范围会写进提示词，并在模型返回后二次校验。平台硬上限始终优先。</p>
+
+      <section class="rule-block">
+        <div class="rule-block-head"><strong>标题长度</strong><span>中文按字 / 英文按字符</span></div>
+        <div class="range-pair">
+          <label class="field compact-field">
+            <span>中文标题</span>
+            <div class="range-inline">
+              <input id="ruleTitleMinZh" type="number" min="4" max="30" step="1" inputmode="numeric">
+              <em>–</em>
+              <input id="ruleTitleMaxZh" type="number" min="4" max="30" step="1" inputmode="numeric">
+              <small>字</small>
+            </div>
+          </label>
+          <label class="field compact-field">
+            <span>英文标题</span>
+            <div class="range-inline">
+              <input id="ruleTitleMinEn" type="number" min="10" max="200" step="1" inputmode="numeric">
+              <em>–</em>
+              <input id="ruleTitleMaxEn" type="number" min="10" max="200" step="1" inputmode="numeric">
+              <small>字符</small>
+            </div>
+          </label>
+        </div>
+        <p class="rule-note">淘宝 / 拼多多 / 抖店 / 京东最多 30 字；TEMU 120 字符、Amazon 200 字符。</p>
+      </section>
+
+      <section class="rule-block">
+        <div class="rule-block-head"><strong>描述长度</strong><span>商品描述字数范围</span></div>
+        <div class="range-inline wide">
+          <input id="ruleDescriptionMin" type="number" min="10" max="500" step="1" inputmode="numeric">
+          <em>–</em>
+          <input id="ruleDescriptionMax" type="number" min="10" max="500" step="1" inputmode="numeric">
+          <small>字</small>
+        </div>
+        <p class="rule-note">描述会写清材质、结构、场景与真实卖点；超长时在句号处截断。</p>
+      </section>
+
+      <section class="rule-block">
+        <div class="rule-block-head"><strong>关键词数量</strong><span>核心词数量范围</span></div>
+        <div class="range-inline wide">
+          <input id="ruleKeywordMin" type="number" min="1" max="12" step="1" inputmode="numeric">
+          <em>–</em>
+          <input id="ruleKeywordMax" type="number" min="1" max="12" step="1" inputmode="numeric">
+          <small>个</small>
+        </div>
+      </section>
+
+      <label class="field rule-textarea">
+        <span>必含关键词 <em>每行一个 · 仅校验中文标题</em></span>
+        <textarea id="ruleMustInclude" rows="3" placeholder="例如：&#10;陶瓷马克杯&#10;办公室"></textarea>
+      </label>
+
+      <label class="field rule-textarea">
+        <span>关键词组合建议 <em>每行一组</em></span>
+        <textarea id="ruleKeywordCombos" rows="3" placeholder="例如：&#10;品类 + 材质 + 场景&#10;品牌 + 品类 + 核心卖点"></textarea>
+      </label>
+
+      <label class="field rule-textarea">
+        <span>自定义禁用词 <em>每行一个 · 会在标题中检测</em></span>
+        <textarea id="ruleBannedWords" rows="3" placeholder="例如：&#10;全网最低&#10;绝对安全"></textarea>
+      </label>
+
+      <label class="field rule-textarea">
+        <span>批量并发数 <em>1–20 · 越高越快，也更容易触发限流</em></span>
+        <select id="ruleConcurrency">
+          <option value="auto">自动（按本机配置，推荐）</option>
+          <option value="1">1 张 / 次（最稳）</option>
+          <option value="2">2 张 / 次</option>
+          <option value="3">3 张 / 次</option>
+          <option value="5">5 张 / 次</option>
+          <option value="8">8 张 / 次</option>
+          <option value="12">12 张 / 次</option>
+          <option value="20">20 张 / 次（最快，易限流）</option>
+        </select>
+      </label>
+    </div>
+    <footer class="drawer-foot">
+      <button type="button" class="text-btn" id="resetRulesBtn">恢复默认</button>
+      <button type="button" class="primary-btn" id="saveRulesBtn">保存规则</button>
+    </footer>
+  </aside>
+
+  <aside class="drawer history-drawer" id="historyDrawer" aria-hidden="true" aria-labelledby="historyTitle">
+    <header class="drawer-head">
+      <div>
+        <span class="eyebrow">LOCAL HISTORY</span>
+        <h2 id="historyTitle">最近生成</h2>
+      </div>
+      <button type="button" class="icon-btn" id="closeHistory" aria-label="关闭历史">
+        <svg class="ico" aria-hidden="true"><use href="#i-close"></use></svg>
+      </button>
+    </header>
+    <div class="drawer-scroll">
+      <div class="history-list" id="historyList"></div>
+    </div>
+    <footer class="drawer-foot">
+      <button type="button" class="text-btn danger-text" id="clearHistory">清空历史</button>
+      <span class="history-note">仅保存在本机</span>
+    </footer>
+  </aside>
+
+  <dialog class="help-dialog" id="helpDialog">
+    <div class="help-head">
+      <div>
+        <span class="eyebrow">QUICK GUIDE</span>
+        <h2>怎么用</h2>
+      </div>
+      <button type="button" class="icon-btn" id="closeHelp" aria-label="关闭说明">
+        <svg class="ico" aria-hidden="true"><use href="#i-close"></use></svg>
+      </button>
+    </div>
+    <div class="help-body">
+      <ol class="help-steps">
+        <li><span>01</span><div><strong>选一张商品图</strong><p>主体占画面 1/3 以上，背景干净。支持拖拽、点击与 Ctrl+V 粘贴。</p></div></li>
+        <li><span>02</span><div><strong>补三行信息（可选）</strong><p>品类、卖点、人群越具体，标题越不容易写成空话。品牌留空时不会虚构品牌。</p></div></li>
+        <li><span>03</span><div><strong>选平台与策略</strong><p>最多同时生成六个平台。策略最多选三个，默认覆盖流量、转化与长尾。</p></div></li>
+        <li><span>04</span><div><strong>复制前先核对</strong><p>字数、极限词与图片信息都已检查，但材质、成分、认证仍需与实物一致。</p></div></li>
+      </ol>
+
+      <div class="help-table-wrap">
+        <table class="help-table">
+          <thead><tr><th>平台</th><th>建议上限</th><th>写法</th></tr></thead>
+          <tbody>
+            <tr><td>淘宝 / 天猫</td><td>30 字</td><td>核心词前置，属性 + 场景</td></tr>
+            <tr><td>拼多多</td><td>30 字</td><td>利益点直给，少形容词</td></tr>
+            <tr><td>抖店</td><td>30 字</td><td>画面感、口语化、人群词</td></tr>
+            <tr><td>京东</td><td>30 字</td><td>规格、材质、型号优先</td></tr>
+            <tr><td>TEMU</td><td>120 字符</td><td>自然英文，关键词 + 场景</td></tr>
+            <tr><td>Amazon</td><td>200 字符</td><td>核心词 + 属性 + 使用场景</td></tr>
+          </tbody>
+        </table>
+        <p class="help-note">平台规则会调整，以上为常用建议上限；上架前以商家后台提示为准。</p>
+      </div>
+
+      <div class="help-callout">
+        <svg class="ico" aria-hidden="true"><use href="#i-lock"></use></svg>
+        <p><strong>隐私说明</strong>：图片仅在你点击生成时发送到设置中的模型服务；生成记录（含压缩图）只保存在本机，可一键清空；API Key 仅存本机 localStorage。</p>
+      </div>
+    </div>
+    <div class="help-foot">
+      <button type="button" class="primary-btn" id="helpCloseBtn">开始使用</button>
+    </div>
+  </dialog>
+
+  <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="false"></div>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

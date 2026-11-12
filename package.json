@@ -1,0 +1,66 @@
+{
+  "name": "ecom-title-studio",
+  "version": "2.0.1",
+  "private": true,
+  "type": "module",
+  "main": "desktop/main.cjs",
+  "description": "跨多多标题工坊 · 电商标题识图生成器",
+  "author": "Kuaduo",
+  "scripts": {
+    "start": "npm run build && node server.mjs --open",
+    "serve": "node server.mjs",
+    "dev": "vite",
+    "dev:server": "node server.mjs",
+    "build": "vite build",
+    "desktop": "electron .",
+    "desktop:dev": "electron . --dev",
+    "test": "node test/title.test.mjs && node test/server.test.mjs",
+    "dist": "electron-builder --win",
+    "dist:sign": "electron-builder --win",
+    "sign:win": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sign-win.ps1",
+    "dist:folder": "electron-builder --win dir"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@element-plus/icons-vue": "^2.3.2",
+    "@vitejs/plugin-vue": "^5.2.4",
+    "electron": "33.4.11",
+    "electron-builder": "26.18.0",
+    "element-plus": "^2.14.7",
+    "vite": "^6.4.5",
+    "vue": "^3.5.44"
+  },
+  "build": {
+    "appId": "com.kuaduo.titleworkshop",
+    "productName": "跨多多标题工坊",
+    "executableName": "KuaduoTitleWorkshop",
+    "asar": false,
+    "npmRebuild": false,
+    "compression": "normal",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "desktop/**/*",
+      "lib/**/*",
+      "public/**/*",
+      "server.mjs",
+      "package.json"
+    ],
+    "win": {
+      "icon": "build/icon.ico",
+      "artifactName": "KuaduoTitleWorkshop-${version}-win-${arch}.${ext}",
+      "target": [
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1200" role="img" aria-label="复古黄铜台灯示例图">
+  <defs>
+    <linearGradient id="wall" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3F4B3B"/>
+      <stop offset="0.55" stop-color="#2A3327"/>
+      <stop offset="1" stop-color="#161C14"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.48" r="0.5">
+      <stop offset="0" stop-color="#FFCF86" stop-opacity="0.55"/>
+      <stop offset="0.45" stop-color="#E7A956" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#E7A956" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="brass" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#7B5222"/>
+      <stop offset="0.22" stop-color="#C79A55"/>
+      <stop offset="0.5" stop-color="#F0D398"/>
+      <stop offset="0.72" stop-color="#B98743"/>
+      <stop offset="1" stop-color="#6A461C"/>
+    </linearGradient>
+    <linearGradient id="brassV" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F1D79E"/>
+      <stop offset="0.45" stop-color="#C0904B"/>
+      <stop offset="1" stop-color="#6B471D"/>
+    </linearGradient>
+    <linearGradient id="shade" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FBF1DA"/>
+      <stop offset="0.55" stop-color="#E8D3AE"/>
+      <stop offset="1" stop-color="#C8AD82"/>
+    </linearGradient>
+    <linearGradient id="shadeInner" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFE1A8"/>
+      <stop offset="1" stop-color="#E9A95B"/>
+    </linearGradient>
+    <linearGradient id="table" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4A3322"/>
+      <stop offset="1" stop-color="#21160F"/>
+    </linearGradient>
+    <linearGradient id="book" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#8C4A35"/>
+      <stop offset="1" stop-color="#5E2E20"/>
+    </linearGradient>
+    <filter id="blur24"><feGaussianBlur stdDeviation="24"/></filter>
+    <filter id="blur8"><feGaussianBlur stdDeviation="8"/></filter>
+  </defs>
+
+  <rect width="1200" height="1200" fill="url(#wall)"/>
+  <ellipse cx="600" cy="570" rx="430" ry="380" fill="url(#glow)"/>
+  <path d="M0 900 C320 884 850 888 1200 868 L1200 1200 L0 1200 Z" fill="url(#table)"/>
+  <path d="M0 900 C320 884 850 888 1200 868" fill="none" stroke="#A77B4A" stroke-opacity="0.25" stroke-width="3"/>
+
+  <path d="M390 590 L300 905 L900 905 L810 590 Z" fill="#FFD79A" opacity="0.055"/>
+
+  <ellipse cx="595" cy="902" rx="225" ry="34" fill="#0A0B08" opacity="0.55" filter="url(#blur24)"/>
+  <ellipse cx="595" cy="884" rx="190" ry="34" fill="url(#brassV)"/>
+  <ellipse cx="595" cy="876" rx="162" ry="28" fill="#8B622C"/>
+  <path d="M455 872 Q595 786 735 872 Q595 912 455 872 Z" fill="url(#brass)"/>
+  <path d="M470 866 Q595 800 720 866" fill="none" stroke="#F6DDA8" stroke-opacity="0.4" stroke-width="5"/>
+
+  <rect x="584" y="590" width="24" height="280" rx="9" fill="url(#brass)"/>
+  <rect x="589" y="600" width="6" height="250" rx="3" fill="#FFE7B7" opacity="0.36"/>
+  <circle cx="596" cy="750" r="17" fill="url(#brassV)"/>
+  <circle cx="596" cy="750" r="7" fill="#5A3A16"/>
+  <circle cx="592" cy="746" r="2.5" fill="#FFE9BC" opacity="0.7"/>
+
+  <path d="M742 380 L790 566 L402 566 L450 380 Q458 356 484 356 L708 356 Q734 356 742 380 Z" fill="url(#shade)"/>
+  <ellipse cx="596" cy="566" rx="194" ry="34" fill="url(#shadeInner)"/>
+  <ellipse cx="596" cy="566" rx="168" ry="24" fill="#FFE8B8"/>
+  <path d="M448 382 L408 552" stroke="#FFF9E8" stroke-opacity="0.35" stroke-width="10" stroke-linecap="round"/>
+  <path d="M470 380 Q596 366 724 382" fill="none" stroke="#9C7D4E" stroke-opacity="0.35" stroke-width="3"/>
+
+  <g opacity="0.22" stroke="#FFE3B0" stroke-width="2">
+    <path d="M470 590 L390 870"/>
+    <path d="M596 590 L596 885"/>
+    <path d="M722 590 L802 870"/>
+  </g>
+
+  <g>
+    <ellipse cx="900" cy="902" rx="140" ry="20" fill="#080A07" opacity="0.4" filter="url(#blur8)"/>
+    <path d="M790 888 L1004 878 L1012 936 L798 946 Z" fill="url(#book)"/>
+    <path d="M790 888 L1004 878 L1006 892 L792 902 Z" fill="#B77457" opacity="0.75"/>
+    <path d="M904 883 L908 942" stroke="#D9B47A" stroke-opacity="0.55" stroke-width="3"/>
+  </g>
+
+  <circle cx="255" cy="255" r="3" fill="#F6D49B" opacity="0.55"/>
+  <circle cx="940" cy="210" r="2" fill="#F6D49B" opacity="0.4"/>
+  <circle cx="1010" cy="330" r="2.4" fill="#F6D49B" opacity="0.3"/>
+</svg>

@@ -172,6 +172,7 @@ async function handleDemo(body) {
   return normalizeResult(raw, {
     platforms,
     strategies,
+    titlesPerPlatform: Number(body.titlesPerPlatform) || 1,
     // 内置示例是商品图，按商品标题展示；真实图片仍遵循用户的素材模式。
     rules: {
       ...(body.rules || {}),
@@ -191,18 +192,21 @@ async function handleAnalyze(body) {
   const image = validateImage(body.image);
   const platforms = resolvePlatformIds(body.platforms);
   const strategies = resolveStrategyIds(body.strategies);
+  const titlesPerPlatform = Number(body.titlesPerPlatform) || 1;
   const brief = normalizeBrief(body.brief);
   const { raw, meta } = await callVision({
     image,
     brief,
     platforms,
     strategies,
+    titlesPerPlatform,
     rules: body.rules,
     settings: body.settings || {},
   });
   return normalizeResult(raw, {
     platforms,
     strategies,
+    titlesPerPlatform,
     rules: body.rules,
     model: meta.model,
     elapsedMs: meta.elapsedMs,

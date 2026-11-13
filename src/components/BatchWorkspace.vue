@@ -117,6 +117,13 @@
               <option value="en">English</option>
             </select>
           </label>
+          <div class="field">
+            <span>快速模式 <em>关思考链 · 更快更省</em></span>
+            <label class="fast-mode-toggle">
+              <input v-model="state.rules.fastMode" type="checkbox" @change="persistRules" />
+              <span>{{ state.rules.fastMode ? '已开启：不生成思维链，实测单张约省 80% 输出 token' : '已关闭：保留思考链，复杂商品更稳但更贵' }}</span>
+            </label>
+          </div>
           <label class="field">
             <span>禁用关键词 <em>一行一个，标题和描述都会检测</em></span>
             <textarea v-model="bannedText" rows="2" placeholder="例如：全网最低&#10;绝对安全" @input="saveBanned"></textarea>

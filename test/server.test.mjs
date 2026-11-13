@@ -122,7 +122,10 @@ test('演示接口返回完整标题且不超平台上限', async () => {
     const data = await response.json();
     assert.equal(data.ok, true);
     assert.equal(data.result.meta.demo, true);
-    assert.equal(data.result.titleCount, 6);
+    // 默认每平台 1 条：2 个平台 → 2 条
+    assert.equal(data.result.titleCount, 2);
+    assert.equal(data.result.titles.filter((title) => title.platform === 'taobao').length, 1);
+    assert.equal(data.result.titles.filter((title) => title.platform === 'temu').length, 1);
     assert.equal(data.result.product.name, '奶油白手作感陶瓷马克杯');
     assert.ok(
       data.result.titles
@@ -134,6 +137,31 @@ test('演示接口返回完整标题且不超平台上限', async () => {
         .filter((title) => title.platform === 'temu')
         .every((title) => title.chars <= 120 && title.translation),
     );
+  } finally {
+    await close(app);
+  }
+});
+
+test('批量模式每平台只返回 1 条标题', async () => {
+  const app = createHttpServer();
+  const base = await listen(app);
+  try {
+    const response = await fetch(`${base}/api/demo`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sampleId: 'mug',
+        platforms: ['taobao', 'temu'],
+        strategies: ['flow', 'convert', 'longtail'],
+        titlesPerPlatform: 1,
+      }),
+    });
+    assert.equal(response.status, 200);
+    const data = await response.json();
+    assert.equal(data.result.titles.length, 2);
+    assert.equal(data.result.titleCount, 2);
+    assert.equal(data.result.titles.filter((title) => title.platform === 'taobao').length, 1);
+    assert.equal(data.result.titles.filter((title) => title.platform === 'temu').length, 1);
   } finally {
     await close(app);
   }
@@ -195,7 +223,8 @@ test('转发视觉模型并归一化结果', async () => {
     assert.equal(response.status, 200);
     const data = await response.json();
     assert.equal(data.ok, true);
-    assert.equal(data.result.titleCount, 6);
+    // 默认每平台 1 条：2 个平台 → 2 条
+    assert.equal(data.result.titleCount, 2);
     assert.equal(data.result.meta.model, 'fake-vision');
     assert.equal(data.result.meta.usage.completion_tokens, 200);
     assert.equal(data.result.overallScore > 0, true);

@@ -1,0 +1,9 @@
+﻿sku,profile,title_prefix,title_suffix,language,target_length,banned_words,must_include,custom_prompt,category,platforms,strategies
+SKU-899-4937,floral-en,Pink Floral Lace,,en,,lace trim|dress,pink|floral|print,"粉色底白色刺绣花卉印花图案；标题必须出现 pink/floral/print/embroidered，禁止写成连衣裙或成衣",apparel,temu,conversion
+SKU-899-4938,floral-en,White Embroidered Rose,,en,,,rose|fern|pearl,"标题突出 white rose/fern/pearl detail/pink background 四个元素，面向服装与家居印花买家",apparel,temu,conversion
+SKU-899-4939,floral-en,Soft Pink Botanical,,en,120,spring collection,botanical|lace,"柔粉色植物蕾丝印花，标题 80–120 字符，强调 botanical/lace/soft pink，不出现季节系列名",apparel,temu,conversion
+SKU-899-4940,home-zh,法式复古,沙发抱枕套,zh,30,,抱枕,"中文 20–30 字：法式复古花卉，写清抱枕套、尺寸与场景，不写四件套与床品",home,temu,conversion
+SKU-899-4941,drinkware-en,Floral Ceramic Mug,,en,,,mug|ceramic,"英文标题：floral pattern ceramic mug / mug wrap design，禁止写 microwave safe 等未验证承诺",drinkware,temu,conversion
+SKU-899-4942,stationery-en,Floral Sticker Sheet,,en,,,sticker|sheet,"英文标题：floral sticker sheet / planner sticker，写清图案主题与张数，禁止承诺无毒防水",stationery,temu,conversion
+SKU-899-4943,,,,,,,,,,,
+SKU-899-4944,,,法式复古花卉,zh,30,原创|独家,印花,"中文服装印花标题 20–30 字：突出花卉图案与可印花面料，不写原创/独家",apparel,temu,conversion

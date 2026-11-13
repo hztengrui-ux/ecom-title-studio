@@ -10,7 +10,7 @@ import {
 import { normalizeResult, parseModelJson } from '../lib/normalize.mjs';
 import { DEFAULT_RULES, RULE_GUIDE, migrateRules, normalizeRules } from '../lib/rules.mjs';
 import { PLATFORMS } from '../lib/platforms.mjs';
-import { buildPrompt, callVision } from '../lib/vision.mjs';
+import { buildPrompt, callVision, fastModeSupported } from '../lib/vision.mjs';
 import { createServer } from 'node:http';
 
 test('GBK 字节估算：中文 2 字节、ASCII 1 字节', () => {
@@ -98,6 +98,8 @@ test('归一化会过滤未选平台、截断超长标题并计算字数', () =>
   const result = normalizeResult(raw, {
     platforms: ['taobao', 'temu'],
     strategies: ['flow', 'convert'],
+    // 这个用例验证「过滤平台 / 截断字数」，故意要 3 条，不依赖默认值
+    titlesPerPlatform: 3,
   });
 
   assert.equal(result.titles.length, 3);
@@ -106,6 +108,117 @@ test('归一化会过滤未选平台、截断超长标题并计算字数', () =>
   assert.equal(result.product.confidence, 0.92);
   assert.equal(result.titleCount, 3);
   assert.deepEqual(result.platformCounts, { taobao: 2, temu: 1 });
+});
+
+test('批量模式每平台只保留 1 条标题（省 token）', () => {
+  const raw = {
+    product: { name: '测试商品' },
+    titles: [
+      { platform: 'taobao', strategy: '流量型', text: '奶油白陶瓷咖啡杯办公室水杯' },
+      { platform: 'taobao', strategy: '转化型', text: '奶油白陶瓷杯带手柄办公室水杯' },
+      { platform: 'temu', strategy: '流量型', text: 'Cream Ceramic Coffee Mug with Handle' },
+    ],
+  };
+  const result = normalizeResult(raw, {
+    platforms: ['taobao', 'temu'],
+    strategies: ['flow', 'convert'],
+    titlesPerPlatform: 1,
+  });
+  assert.equal(result.titles.length, 2);
+  assert.equal(result.titleCount, 2);
+  assert.deepEqual(result.platformCounts, { taobao: 1, temu: 1 });
+  assert.equal(result.titles.filter((title) => title.platform === 'taobao').length, 1);
+});
+
+test('默认每个平台只要求 1 条标题，单张与批量一致', () => {
+  const batchPrompt = buildPrompt({
+    brief: {},
+    platforms: ['taobao', 'temu'],
+    strategies: ['flow', 'convert', 'longtail'],
+    titlesPerPlatform: 1,
+  });
+  assert.ok(batchPrompt.includes('每个平台只生成 1 条标题'));
+  assert.ok(batchPrompt.includes('总共 2 条'));
+
+  // 不传 titlesPerPlatform 时默认也是 1 条（单张模式省钱）
+  const singlePrompt = buildPrompt({
+    brief: {},
+    platforms: ['taobao'],
+    strategies: ['flow', 'convert', 'longtail'],
+  });
+  assert.ok(singlePrompt.includes('每个平台只生成 1 条标题'));
+  assert.ok(singlePrompt.includes('总共 1 条'));
+});
+
+test('快速模式默认开启，可显式关闭', () => {
+  assert.equal(DEFAULT_RULES.fastMode, true);
+  assert.equal(normalizeRules({}).fastMode, true);
+  assert.equal(normalizeRules({ fastMode: false }).fastMode, false);
+  assert.equal(normalizeRules({ fastMode: true }).fastMode, true);
+  // 旧模板没有这个字段时按开启处理（升级后默认省钱）
+  assert.equal(normalizeRules({ rulesVersion: 2 }).fastMode, true);
+});
+
+test('快速模式只对认识 thinking 参数的服务开启', () => {
+  assert.equal(fastModeSupported('https://api.deepseek.com/v1', 'deepseek-flash'), true);
+  assert.equal(fastModeSupported('https://ark.cn-beijing.volces.com/api/v3', 'doubao-seed-1-6-vision'), true);
+  assert.equal(fastModeSupported('https://api.openai.com/v1', 'gpt-4.1-mini'), false);
+  assert.equal(fastModeSupported('https://open.bigmodel.cn/api/paas/v4', 'glm-4.5v'), false);
+  assert.equal(fastModeSupported('不是URL', 'qwen-vl-max'), false);
+  assert.equal(fastModeSupported('', 'deepseek-flash'), true);
+});
+
+test('快速模式请求体：DeepSeek 带 thinking disabled，关闭时与不支持的厂商都不带', async () => {
+  const realFetch = globalThis.fetch;
+  const calls = [];
+  const fake = (payload) => {
+    calls.push(payload);
+    return new Response(JSON.stringify({
+      choices: [{
+        finish_reason: 'stop',
+        message: {
+          content: JSON.stringify({
+            product: { name: '测试杯子' },
+            titles: [{ platform: 'temu', strategy: '流量型', text: 'Cream Ceramic Mug for Office' }],
+          }),
+        },
+      }],
+      usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 },
+    }), { status: 200, headers: { 'content-type': 'application/json' } });
+  };
+  globalThis.fetch = async (url, init) => fake(JSON.parse(init.body));
+  const baseArgs = {
+    image: 'data:image/png;base64,AAAA',
+    brief: {},
+    platforms: ['temu'],
+    strategies: ['flow'],
+    rules: {},
+    titlesPerPlatform: 1,
+  };
+  try {
+    await callVision({
+      ...baseArgs,
+      settings: { baseUrl: 'https://api.deepseek.com/v1', model: 'deepseek-flash', apiKey: 'k' },
+      fastMode: true,
+    });
+    assert.equal(calls.at(-1).thinking?.type, 'disabled');
+
+    await callVision({
+      ...baseArgs,
+      settings: { baseUrl: 'https://api.deepseek.com/v1', model: 'deepseek-flash', apiKey: 'k' },
+      fastMode: false,
+    });
+    assert.equal(calls.at(-1).thinking, undefined);
+
+    await callVision({
+      ...baseArgs,
+      settings: { baseUrl: 'https://api.openai.com/v1', model: 'gpt-4.1-mini', apiKey: 'k' },
+      fastMode: true,
+    });
+    assert.equal(calls.at(-1).thinking, undefined);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
 });
 
 test('自定义规则会约束标题长度、描述长度、禁用词与必含词', () => {

@@ -5066,3 +5066,20 @@ body.preview-open {
 .rule-advanced .el-collapse-item__content { display: grid; gap: 10px; padding-bottom: 10px; }
 .rule-advanced-title { display: flex; align-items: center; gap: 6px; font-size: 8px; }
 .rule-advanced-title em { padding: 1px 5px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-deep); font-size: 6px; font-style: normal; }
+
+/* 快速模式：批量设置里的开关（关思考链，省 token） */
+.fast-mode-toggle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--ink-2);
+  font-size: 8px;
+  line-height: 1.5;
+  cursor: pointer;
+}
+.fast-mode-toggle input {
+  width: 13px;
+  height: 13px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}

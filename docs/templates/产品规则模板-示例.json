@@ -1,0 +1,149 @@
+{
+  "_note": "跨多多标题工坊 · 产品级规则模板 v2（示例填充版，可直接改）。导入时按 sku 精确匹配图片文件名（去扩展名）；留空的字段继承上一级。",
+  "app": "KuaduoTitleWorkshop",
+  "type": "batch-template",
+  "version": 2,
+  "batchName": "2026-11 花卉印花 · Temu 英文（示例）",
+  "platforms": ["temu"],
+  "strategies": ["conversion"],
+  "merge": {
+    "lists": "union",
+    "titlePrefix": "replace",
+    "titleSuffix": "replace"
+  },
+  "rules": {
+    "_note": "全局默认：所有没被档案/单品覆盖的字段都用这里。",
+    "assetMode": true,
+    "targetCategory": "apparel",
+    "language": "en",
+    "titleMinEn": 40,
+    "titleMaxEn": 150,
+    "descriptionMin": 40,
+    "descriptionMax": 120,
+    "keywordMin": 3,
+    "keywordMax": 8,
+    "bannedWords": [
+      "doctor",
+      "medical",
+      "cure",
+      "antibacterial",
+      "FDA",
+      "best",
+      "No.1",
+      "100%",
+      "free shipping",
+      "Disney",
+      "Marvel",
+      "Nike",
+      "Gucci"
+    ],
+    "mustInclude": [],
+    "customPrompt": "跨境电商英文标题：客观描述画面图案与可印花材质，不写成品服装、不写品牌与医疗功效；每条 60–140 字符，首字母大写。"
+  },
+  "profiles": [
+    {
+      "id": "floral-en",
+      "name": "花卉印花 · 英文 · Temu",
+      "match": { "category": "apparel", "language": "en" },
+      "_note": "凡命中 服装+英文 的商品自动套这份档案，单品可再覆盖。",
+      "overrides": {
+        "bannedWords": ["lace trim", "embroidery kit", "finished garment", "apparel", "dress"],
+        "mustInclude": ["floral", "print"],
+        "customPrompt": "面向美国 25–45 岁女性：标题必须出现 floral 与 print，突出图案风格（lace / botanical / embroidered）与可印花用途（fabric / apparel print / home decor），禁止写成成品服装或手工套件。"
+      }
+    },
+    {
+      "id": "home-zh",
+      "name": "家居抱枕 · 中文 · Temu",
+      "match": { "category": "home", "language": "zh" },
+      "overrides": {
+        "titleMinZh": 12,
+        "titleMaxZh": 30,
+        "targetLength": 30,
+        "bannedWords": ["四件套", "床品", "纯棉", "抗菌"],
+        "mustInclude": ["抱枕"],
+        "customPrompt": "中文家居标题：突出图案风格、抱枕套尺寸与使用场景（沙发/卧室），不写四件套、不写材质功效承诺。"
+      }
+    },
+    {
+      "id": "drinkware-en",
+      "name": "杯具图案 · 英文 · Temu",
+      "match": { "category": "drinkware", "language": "en" },
+      "overrides": {
+        "mustInclude": ["mug"],
+        "bannedWords": ["microwave safe", "dishwasher safe", "food grade"],
+        "customPrompt": "英文杯具图案标题：写清 mug / ceramic mug / wrap design 与图案主题，禁止承诺微波炉、洗碗机、食品级等未验证参数。"
+      }
+    },
+    {
+      "id": "stationery-en",
+      "name": "文具贴纸 · 英文 · Temu",
+      "match": { "category": "stationery", "language": "en" },
+      "overrides": {
+        "mustInclude": ["sticker"],
+        "bannedWords": ["non-toxic", "food grade", "waterproof"],
+        "customPrompt": "英文贴纸标题：写清 sticker sheet / planner sticker 与图案主题、张数，禁止承诺无毒、食品级、防水等未经检测的说法。"
+      }
+    }
+  ],
+  "overrides": {
+    "SKU-899-4937": {
+      "_note": "你截图里的第一张：粉色底白色刺绣花卉印花。",
+      "profile": "floral-en",
+      "titlePrefix": "Pink Floral Lace",
+      "mustInclude": ["pink", "floral", "print"],
+      "bannedWords": ["lace trim", "dress"],
+      "customPrompt": "这条是粉色底白色刺绣花卉印花图案（Pink Floral Lace Print Design White Embroidered Flower Pattern）：标题必须出现 pink / floral / print / embroidered，卖点是图案本身，禁止写成连衣裙或成衣。"
+    },
+    "SKU-899-4938": {
+      "_note": "截图第二张：白底玫瑰+蕨类+珍珠点缀。",
+      "profile": "floral-en",
+      "titlePrefix": "White Embroidered Rose",
+      "mustInclude": ["rose", "fern", "pearl"],
+      "customPrompt": "标题突出 white rose / fern / pearl detail / pink background 四个元素，面向服装与家居印花买家，不写成品。"
+    },
+    "SKU-899-4939": {
+      "_note": "截图第三张：柔粉色植物蕾丝花卉印花。",
+      "profile": "floral-en",
+      "titlePrefix": "Soft Pink Botanical",
+      "targetLength": 120,
+      "mustInclude": ["botanical", "lace"],
+      "bannedWords": ["spring collection"],
+      "customPrompt": "面向女装与家居的柔粉色植物蕾丝印花，标题 80–120 字符，强调 botanical / lace / soft pink 三个词，不出现季节系列名。"
+    },
+    "SKU-899-4940": {
+      "_note": "家居抱枕方向，走中文档案。",
+      "profile": "home-zh",
+      "titlePrefix": "法式复古",
+      "titleSuffix": "沙发抱枕套",
+      "mustInclude": ["抱枕"],
+      "customPrompt": "中文标题 20–30 字：法式复古花卉，写清抱枕套、尺寸与场景（沙发/卧室），不写四件套与床品。"
+    },
+    "SKU-899-4941": {
+      "_note": "杯具方向。",
+      "profile": "drinkware-en",
+      "titlePrefix": "Floral Ceramic Mug",
+      "mustInclude": ["mug", "ceramic"],
+      "customPrompt": "英文标题：floral pattern ceramic mug / mug wrap design，突出可定制图案，禁止写 microwave safe 等未验证承诺。"
+    },
+    "SKU-899-4942": {
+      "_note": "文具贴纸方向。",
+      "profile": "stationery-en",
+      "titlePrefix": "Floral Sticker Sheet",
+      "mustInclude": ["sticker", "sheet"],
+      "customPrompt": "英文标题：floral sticker sheet / planner sticker，写清图案主题与张数，面向手账与礼品场景，禁止承诺无毒防水。"
+    },
+    "SKU-899-4943": {
+      "_note": "故意留空：演示“全部继承”，不需要任何字段。"
+    },
+    "SKU-899-4944": {
+      "_note": "中文服装印花，单品级改语言与长度。",
+      "language": "zh",
+      "targetLength": 30,
+      "titlePrefix": "法式复古花卉",
+      "mustInclude": ["印花"],
+      "bannedWords": ["原创", "独家"],
+      "customPrompt": "中文服装印花标题 20–30 字：突出花卉图案与可印花面料，不写原创/独家等无法证明的说法。"
+    }
+  }
+}

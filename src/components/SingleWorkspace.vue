@@ -98,7 +98,7 @@
           </button>
         </div>
 
-        <div class="section-label">标题策略 <em>最多 3 个</em></div>
+        <div class="section-label">标题策略 <em>决定这 1 条标题的风格</em></div>
         <div class="strategy-chips">
           <button
             v-for="strategy in state.strategies"
@@ -170,7 +170,7 @@ const generateMeta = computed(() => {
   const platforms = state.platforms
     .filter((platform) => state.selectedPlatforms.includes(platform.id))
     .map((platform) => platform.short);
-  return `${platforms.join(' / ') || '未选平台'} · ${state.selectedStrategies.length} 条策略`;
+  return `${platforms.join(' / ') || '未选平台'} · 每平台 1 条标题`;
 });
 
 function onFileChange(event) {

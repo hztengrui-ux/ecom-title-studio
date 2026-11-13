@@ -140,7 +140,7 @@ export const state = reactive({
   rules: loadRules(),
   brief: { ...DEFAULT_BRIEF, ...readStored(STORAGE.brief, {}) },
   selectedPlatforms: ['temu'],
-  selectedStrategies: ['flow', 'convert', 'longtail'],
+  selectedStrategies: ['flow'],
   single: {
     image: null,
     busy: false,
@@ -325,8 +325,10 @@ export async function loadMeta() {
   const strategyIds = new Set(state.strategies.map((strategy) => strategy.id));
   state.selectedStrategies = state.selectedStrategies.filter((id) => strategyIds.has(id));
   if (!state.selectedStrategies.length) {
-    state.selectedStrategies = state.strategies.slice(0, 3).map((strategy) => strategy.id);
+    state.selectedStrategies = [state.strategies[0]?.id || 'flow'];
   }
+  // 每个平台只生成 1 条标题：策略是单选，只保留第一个有效选择。
+  state.selectedStrategies = state.selectedStrategies.slice(0, 1);
   state.metaLoading = false;
   state.ready = true;
 }
@@ -344,19 +346,9 @@ export function togglePlatform(id) {
 }
 
 export function toggleStrategy(id) {
-  if (state.selectedStrategies.includes(id)) {
-    if (state.selectedStrategies.length === 1) {
-      toast('至少保留一个标题策略');
-      return;
-    }
-    state.selectedStrategies = state.selectedStrategies.filter((item) => item !== id);
-  } else {
-    if (state.selectedStrategies.length >= 3) {
-      toast('最多同时选 3 个标题策略');
-      return;
-    }
-    state.selectedStrategies = [...state.selectedStrategies, id];
-  }
+  // 每个平台只出 1 条标题，策略因此是单选：再点一次不会取消。
+  if (state.selectedStrategies.includes(id)) return;
+  state.selectedStrategies = [id];
 }
 
 function loadImage(src) {
@@ -520,6 +512,7 @@ export async function generateSingle() {
         sampleId: state.single.image.sampleId,
         platforms: state.selectedPlatforms,
         strategies: state.selectedStrategies,
+        titlesPerPlatform: 1,
         rules: state.rules,
       }, 30000);
       result = data.result;
@@ -530,6 +523,7 @@ export async function generateSingle() {
         brief: state.brief,
         platforms: state.selectedPlatforms,
         strategies: state.selectedStrategies,
+        titlesPerPlatform: 1,
         rules: state.rules,
         settings: requestSettings(),
       }, 240000);
@@ -783,6 +777,7 @@ async function processBatchItem(item) {
         sampleId: item.sampleId,
         platforms: state.selectedPlatforms,
         strategies: state.selectedStrategies,
+        titlesPerPlatform: 1,
         rules: state.rules,
       }, 30000);
       result = data.result;
@@ -796,6 +791,7 @@ async function processBatchItem(item) {
         brief: state.brief,
         platforms: state.selectedPlatforms,
         strategies: state.selectedStrategies,
+        titlesPerPlatform: 1,
         rules: state.rules,
         settings: requestSettings(),
       }, 240000);
@@ -969,23 +965,16 @@ export async function exportBatchExcel() {
 }
 
 function buildBatchCsv() {
-  const rows = [['序号', 'SKU', '文件名', '商品名', '平台', '策略', '标题', '对照', '字数', '描述', '关键词']];
-  selectedExportItems().forEach((item, index) => {
-    for (const title of item.result.titles) {
-      rows.push([
-        index + 1,
-        item.sku || item.name,
-        item.name,
-        item.result.product?.name || '',
-        platformShort(title.platform),
-        title.strategyLabel || '',
-        title.text,
-        title.translation || '',
-        `${title.chars}/${title.limit}`,
-        item.result.description?.text || '',
-        (item.result.keywords?.core || []).join('、'),
-      ]);
-    }
+  // 与 Excel 导出保持一致：只给上架要用的 5 列。
+  const rows = [['SKU', '状态', '商品名', '品类', '主标题']];
+  selectedExportItems().forEach((item) => {
+    rows.push([
+      item.sku || item.name,
+      item.status === 'done' ? '完成' : item.status === 'error' ? '失败' : '待处理',
+      item.result?.product?.name || '',
+      item.result?.product?.category || '',
+      item.result?.titles?.[0]?.text || '',
+    ]);
   });
   return `\uFEFF${rows.map((row) => row.map((cell) => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(',')).join('\r\n')}`;
 }

@@ -18,6 +18,16 @@
     <div class="rule-groups">
       <section class="rule-block">
         <div class="rule-block-head">
+          <h4>快速模式</h4>
+          <span>关思考链：更快、更省 token；复杂商品可关闭</span>
+        </div>
+        <div class="rule-range">
+          <el-switch v-model="draft.fastMode" active-text="开启" inactive-text="关闭" />
+          <span class="rule-unit">{{ draft.fastMode ? '不生成思维链，实测单张约省 80% 输出 token' : '保留思考链，质量更稳但更贵' }}</span>
+        </div>
+      </section>
+      <section class="rule-block">
+        <div class="rule-block-head">
           <h4>标题</h4>
           <span>下限避免只剩品类词，上限对齐平台硬限</span>
         </div>
@@ -216,6 +226,7 @@ function save() {
     keywordCombos: comboText.value.split(/\n|,|，|、|;/).map((item) => item.trim()).filter(Boolean),
     concurrencyMode: concurrencyValue.value === 'auto' ? 'auto' : 'manual',
     concurrency: concurrencyValue.value === 'auto' ? recommendedConcurrency() : Number(concurrencyValue.value),
+    fastMode: draft.fastMode !== false,
   };
   const normalized = normalizeRules({ ...state.rules, ...payload });
   const corrected = warnTitles.value || warnDescription.value || warnKeywords.value;

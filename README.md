@@ -15,10 +15,10 @@
 
 ## Windows 桌面版
 
-当前为 **2.0.2（Vue 3 + Element Plus 重写版）**，提供两种免安装分发（也可直接在 [Releases](https://github.com/hztengrui-ux/ecom-title-studio/releases) 下载）：
+当前为 **2.1.0（Vue 3 + Element Plus 重写版）**，提供两种免安装分发（也可直接在 [Releases](https://github.com/hztengrui-ux/ecom-title-studio/releases) 下载）：
 
-- `KuaduoTitleWorkshop-2.0.2-win-x64.exe`：自解压单文件，双击选目录，解压后双击 `KuaduoTitleWorkshop.exe`。
-- `KuaduoTitleWorkshop-2.0.2-win-x64.zip`：完整解压后双击 `KuaduoTitleWorkshop.exe`。
+- `KuaduoTitleWorkshop-2.1.0-win-x64.exe`：自解压单文件，双击选目录，解压后双击 `KuaduoTitleWorkshop.exe`。
+- `KuaduoTitleWorkshop-2.1.0-win-x64.zip`：完整解压后双击 `KuaduoTitleWorkshop.exe`。
 
 不需要安装，不需要管理员权限。不要只复制 exe，也不要在压缩包里直接运行。
 
@@ -30,6 +30,16 @@
 - 模型设置与 API Key **自动保存**；固定 origin 后，关闭软件再打开不会掉设置。
 - 当前版本是便携版：整个文件夹可以放到任意目录，设置与历史保存在程序旁的 `KuaduoTitleWorkshop-data`，换电脑时连文件夹一起复制即可；目录不可写时会回退到 `%APPDATA%\KuaduoTitleWorkshop`。
 - 首次启动会自动迁移旧的 `TitleWorkshop-data` / `%APPDATA%\TitleWorkshop`，原设置和历史不用重新配。
+
+### 在线账号登录（2.1.0 起）
+
+桌面版启动时会先要求登录，账号由跨多多统一开通：
+
+- 登录接口：`https://api.kuaduoduo.vip/auth/login`（经本地服务 `127.0.0.1:47821/api/auth/*` 代理，避免跨域）。
+- 登录成功后令牌保存在本机，下次启动自动免登录，并**每 30 分钟**向服务器校验一次。
+- 账号到期、被管理员停用后，下一次校验即被拒绝并退回登录页，提示原因（即时收回，无需重新分发安装包）。
+- 默认授权 30 天；续期、停用、改密由管理员在服务器上执行 `node admin.mjs`（`extend` / `disable` / `enable` / `reset`）。
+- 顶部账号胶囊显示「账号（姓名）· 剩 N 天」，点开可「重新校验授权 / 退出登录」。
 
 ### Windows SmartScreen 提示
 

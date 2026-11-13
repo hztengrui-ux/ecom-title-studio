@@ -20,7 +20,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_PUBLIC_DIR = path.join(__dirname, 'public');
 const MAX_BODY_BYTES = 16 * 1024 * 1024;
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
-const VERSION = '1.1.0';
+const VERSION = '2.1.0';
+// 在线账号授权服务（腾讯云轻量服务器 · Nginx 反代 127.0.0.1:8090）
+const DEFAULT_AUTH_BASE = 'https://api.kuaduoduo.vip';
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -300,7 +302,30 @@ async function serveFile(req, res, filePath, stat) {
   stream.pipe(res);
 }
 
-export function createHttpServer({ publicDir = DEFAULT_PUBLIC_DIR } = {}) {
+async function forwardAuth(authBase, requestPath, { method = 'GET', body, token } = {}) {
+  const headers = { Accept: 'application/json' };
+  if (body !== undefined) headers['Content-Type'] = 'application/json';
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const response = await fetch(`${authBase}${requestPath}`, {
+    method,
+    headers,
+    body: body === undefined ? undefined : JSON.stringify(body),
+    signal: AbortSignal.timeout(15000),
+  });
+  const text = await response.text();
+  let payload = null;
+  try {
+    payload = text ? JSON.parse(text) : null;
+  } catch {
+    payload = null;
+  }
+  return { status: response.status, payload, text };
+}
+
+export function createHttpServer({
+  publicDir = DEFAULT_PUBLIC_DIR,
+  authBase = process.env.AUTH_BASE || DEFAULT_AUTH_BASE,
+} = {}) {
   return http.createServer(async (req, res) => {
     const requestUrl = new URL(req.url || '/', 'http://127.0.0.1');
     const { pathname } = requestUrl;
@@ -409,6 +434,65 @@ export function createHttpServer({ publicDir = DEFAULT_PUBLIC_DIR } = {}) {
           console.error('[test]', error?.message || error);
           sendError(res, 500, 'TEST_FAILED', '连通性测试失败');
         }
+      }
+      return;
+    }
+
+    if (pathname === '/api/auth/config' && req.method === 'GET') {
+      sendJson(res, 200, { ok: true, baseUrl: authBase, source: 'online' });
+      return;
+    }
+
+    if (pathname === '/api/auth/login' && req.method === 'POST') {
+      try {
+        const body = await readJsonBody(req);
+        const username = String(body.username || '').trim();
+        const password = String(body.password || '');
+        if (!username || !password) {
+          sendError(res, 400, 'AUTH_INPUT_INVALID', '请输入账号和密码');
+          return;
+        }
+        const result = await forwardAuth(authBase, '/auth/login', {
+          method: 'POST',
+          body: { username, password },
+        });
+        if (result.status === 200 && result.payload?.ok) {
+          sendJson(res, 200, result.payload);
+          return;
+        }
+        const message = result.payload?.error || '登录失败，请检查账号密码';
+        sendJson(res, result.status >= 400 ? result.status : 401, {
+          ok: false,
+          error: { code: 'AUTH_DENIED', message },
+        });
+      } catch (error) {
+        console.error('[auth/login]', error?.message || error);
+        sendError(res, 503, 'AUTH_UNAVAILABLE', '无法连接授权服务器，请检查网络或稍后再试');
+      }
+      return;
+    }
+
+    if (pathname === '/api/auth/me' && req.method === 'GET') {
+      try {
+        const header = String(req.headers.authorization || '');
+        const token = header.replace(/^Bearer\s+/i, '').trim();
+        if (!token) {
+          sendError(res, 401, 'AUTH_TOKEN_MISSING', '请先登录');
+          return;
+        }
+        const result = await forwardAuth(authBase, '/auth/me', { token });
+        if (result.status === 200 && result.payload?.ok) {
+          sendJson(res, 200, result.payload);
+          return;
+        }
+        const message = result.payload?.error || '登录已失效，请重新登录';
+        sendJson(res, result.status >= 400 ? result.status : 401, {
+          ok: false,
+          error: { code: 'AUTH_INVALID', message },
+        });
+      } catch (error) {
+        console.error('[auth/me]', error?.message || error);
+        sendError(res, 503, 'AUTH_UNAVAILABLE', '无法连接授权服务器，请检查网络或稍后再试');
       }
       return;
     }

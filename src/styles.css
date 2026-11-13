@@ -5083,3 +5083,235 @@ body.preview-open {
   accent-color: var(--accent);
   cursor: pointer;
 }
+
+/* ---------- 登录页（在线账号授权） ---------- */
+.login-shell {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  background:
+    radial-gradient(900px 520px at 82% -12%, #fcf6e9 0%, rgba(252, 246, 233, 0) 60%),
+    radial-gradient(760px 480px at 6% 106%, #efe6d5 0%, rgba(239, 230, 213, 0) 58%),
+    var(--paper);
+  overflow: hidden;
+}
+
+.login-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.login-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(2px);
+  opacity: 0.55;
+}
+
+.login-orb-a {
+  width: 420px;
+  height: 420px;
+  right: -120px;
+  top: -140px;
+  background: radial-gradient(circle at 35% 35%, #f6d9cd 0%, rgba(246, 217, 205, 0) 70%);
+}
+
+.login-orb-b {
+  width: 360px;
+  height: 360px;
+  left: -110px;
+  bottom: -150px;
+  background: radial-gradient(circle at 60% 40%, #e6ebe0 0%, rgba(230, 235, 224, 0) 72%);
+}
+
+.login-card {
+  position: relative;
+  z-index: 1;
+  width: min(442px, calc(100vw - 48px));
+  padding: 32px 34px 24px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: var(--paper-2);
+  box-shadow: var(--shadow-soft);
+}
+
+.login-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 26px;
+}
+
+.login-glyph {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--accent);
+  color: #fff8ef;
+  font-family: var(--serif);
+  font-size: 22px;
+  box-shadow: 0 8px 18px rgba(210, 85, 60, 0.28);
+}
+
+.login-brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.login-brand-text strong {
+  font-family: var(--serif);
+  font-size: 18px;
+  color: var(--ink);
+  letter-spacing: 0.04em;
+}
+
+.login-brand-text span {
+  margin-top: 3px;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--muted-2);
+}
+
+.login-title {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: 0.02em;
+}
+
+.login-sub {
+  margin: 8px 0 24px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.login-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.login-field > span {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.login-field .el-input__wrapper {
+  border-radius: 10px;
+  background: #fffdf8;
+  box-shadow: 0 0 0 1px var(--line) inset;
+}
+
+.login-error,
+.login-warn {
+  margin: 0;
+  padding: 9px 12px;
+  border-radius: 9px;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.login-error {
+  background: #fbe9e4;
+  border: 1px solid #edc8bd;
+  color: var(--danger);
+}
+
+.login-warn {
+  background: #fbf3e2;
+  border: 1px solid #ecd8b4;
+  color: var(--amber);
+}
+
+.login-submit {
+  width: 100%;
+  margin-top: 4px;
+  border-radius: 11px;
+  font-size: 15px;
+  letter-spacing: 0.24em;
+}
+
+.login-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 26px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--line);
+  font-size: 11.5px;
+  color: var(--muted-2);
+}
+
+.login-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--sage);
+  box-shadow: 0 0 0 3px rgba(93, 112, 86, 0.14);
+}
+
+.login-sep {
+  color: var(--line-strong);
+}
+
+/* ---------- 顶栏账号胶囊 ---------- */
+.account-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fffdf8;
+  color: var(--ink-2);
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.18s ease, color 0.18s ease;
+}
+
+.account-chip:hover {
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+.account-chip .account-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--sage);
+}
+
+.account-chip.is-offline .account-dot {
+  background: var(--amber);
+}
+
+.account-chip .account-name {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-chip .account-days {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}

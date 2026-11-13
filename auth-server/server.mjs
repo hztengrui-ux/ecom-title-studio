@@ -188,10 +188,19 @@ function bearer(req) {
 }
 
 function adminOk(req) {
-  if (!ADMIN_TOKEN) return false;
   const given = String(req.headers['x-admin-token'] || '');
-  if (given.length !== ADMIN_TOKEN.length) return false;
-  return crypto.timingSafeEqual(Buffer.from(given), Buffer.from(ADMIN_TOKEN));
+  if (ADMIN_TOKEN && given.length === ADMIN_TOKEN.length) {
+    try {
+      if (crypto.timingSafeEqual(Buffer.from(given), Buffer.from(ADMIN_TOKEN))) return true;
+    } catch {
+      // 长度不一致时 timingSafeEqual 会抛错，按无效处理
+    }
+  }
+  // 也允许 role=admin 的账号用登录令牌访问管理接口（管理员账号/手机号 + 密码登录）
+  const payload = verifyToken(bearer(req));
+  if (!payload) return false;
+  const account = readAccounts().accounts.find((item) => item.id === payload.sub);
+  return Boolean(account && account.role === 'admin' && !account.disabledAt);
 }
 
 function adminRoute(pathname) {

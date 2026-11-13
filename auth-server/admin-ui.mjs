@@ -43,6 +43,9 @@ export function renderAdminPage() {
   .card .lead { margin:0 0 16px; font-size:12.5px; color:var(--muted); }
 
   .login-card { max-width:440px; margin:8vh auto 0; }
+  .tabs { display:flex; gap:6px; margin:0 0 16px; padding:4px; border:1px solid var(--line); border-radius:11px; background:#f7f1e6; }
+  .tab { flex:1; height:32px; border:0; border-radius:8px; background:transparent; color:var(--muted); font-size:13px; cursor:pointer; font-family:var(--sans); }
+  .tab.is-active { background:#fffdf8; color:var(--ink); box-shadow:0 1px 3px rgba(63,50,32,.12); }
   .field { display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }
   .field label { font-size:12px; letter-spacing:.08em; color:var(--muted); }
   input[type=text], input[type=password], input[type=number], select {
@@ -110,10 +113,26 @@ export function renderAdminPage() {
 
   <section class="card login-card" id="loginCard">
     <h2>管理员登录</h2>
-    <p class="lead">请输入服务器上的管理员令牌（<code>/etc/kuaduo-auth.env</code> 里的 <code>AUTH_ADMIN_TOKEN</code>）。令牌只保存在本机浏览器。</p>
-    <div class="field">
-      <label for="tokenInput">管理员令牌</label>
-      <input type="password" id="tokenInput" placeholder="粘贴管理员令牌" autocomplete="off" />
+    <p class="lead">用管理员账号（或手机号）+ 密码登录后台；也可以切换到管理员令牌登录。</p>
+    <div class="tabs" id="loginTabs">
+      <button class="tab is-active" type="button" data-mode="account">账号 / 手机号</button>
+      <button class="tab" type="button" data-mode="token">令牌登录</button>
+    </div>
+    <div id="accountFields">
+      <div class="field">
+        <label for="adminUser">管理员账号 / 手机号</label>
+        <input type="text" id="adminUser" placeholder="如 13800138000" autocomplete="username" />
+      </div>
+      <div class="field">
+        <label for="adminPass">密码</label>
+        <input type="password" id="adminPass" placeholder="请输入密码" autocomplete="current-password" />
+      </div>
+    </div>
+    <div id="tokenFields" class="hidden">
+      <div class="field">
+        <label for="tokenInput">管理员令牌</label>
+        <input type="password" id="tokenInput" placeholder="粘贴管理员令牌" autocomplete="off" />
+      </div>
     </div>
     <button class="btn primary" id="loginBtn" type="button">进入管理后台</button>
     <p class="error hidden" id="loginError"></p>
@@ -162,7 +181,8 @@ export function renderAdminPage() {
 <script>
 (function () {
   var TOKEN_KEY = 'kuaduo.admin.token';
-  var state = { token: localStorage.getItem(TOKEN_KEY) || '', accounts: [] };
+  var TOKEN_SESSION_KEY = 'kuaduo.admin.session';
+  var state = { token: localStorage.getItem(TOKEN_SESSION_KEY) || '', adminToken: localStorage.getItem(TOKEN_KEY) || '', accounts: [] };
 
   var $ = function (id) { return document.getElementById(id); };
   var loginCard = $('loginCard');
@@ -197,7 +217,8 @@ export function renderAdminPage() {
   async function api(path, options) {
     options = options || {};
     var headers = Object.assign({ 'Content-Type': 'application/json' }, options.headers || {});
-    if (state.token) headers['X-Admin-Token'] = state.token;
+    if (state.adminToken) headers['X-Admin-Token'] = state.adminToken;
+    if (state.token) headers['Authorization'] = 'Bearer ' + state.token;
     var resp = await fetch(path, {
       method: options.method || 'GET',
       headers: headers,
@@ -347,40 +368,86 @@ export function renderAdminPage() {
     panel.classList.remove('hidden');
     $('logoutBtn').hidden = false;
   }
+  var loginMode = 'account';
+  function setLoginMode(mode) {
+    loginMode = mode;
+    document.querySelectorAll('#loginTabs .tab').forEach(function (btn) {
+      btn.classList.toggle('is-active', btn.getAttribute('data-mode') === mode);
+    });
+    $('accountFields').classList.toggle('hidden', mode !== 'account');
+    $('tokenFields').classList.toggle('hidden', mode !== 'token');
+    hide($('loginError'));
+  }
+
   function logout() {
     state.token = '';
+    state.adminToken = '';
+    localStorage.removeItem(TOKEN_SESSION_KEY);
     localStorage.removeItem(TOKEN_KEY);
     panel.classList.add('hidden');
     loginCard.classList.remove('hidden');
     $('logoutBtn').hidden = true;
     $('tokenInput').value = '';
+    $('adminPass').value = '';
   }
 
-  async function enterWithToken() {
-    var token = $('tokenInput').value.trim();
-    if (!token) { $('loginError').textContent = '请输入管理员令牌'; $('loginError').classList.remove('hidden'); return; }
-    $('loginBtn').disabled = true;
+  function loginFail(text) {
+    $('loginError').textContent = text;
+    $('loginError').classList.remove('hidden');
+  }
+
+  async function enter() {
     hide($('loginError'));
-    state.token = token;
+    $('loginBtn').disabled = true;
     try {
+      if (loginMode === 'token') {
+        var adminToken = $('tokenInput').value.trim();
+        if (!adminToken) { loginFail('请输入管理员令牌'); return; }
+        state.adminToken = adminToken;
+        state.token = '';
+        await loadAccounts();
+        localStorage.setItem(TOKEN_KEY, adminToken);
+        showPanel();
+        return;
+      }
+      var username = $('adminUser').value.trim();
+      var password = $('adminPass').value;
+      if (!username || !password) { loginFail('请输入管理员账号和密码'); return; }
+      var resp = await fetch('/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: username, password: password }),
+      });
+      var data = await resp.json().catch(function () { return null; });
+      if (!resp.ok || !data || !data.ok) {
+        loginFail((data && data.error) || '账号或密码错误');
+        return;
+      }
+      if (!data.account || data.account.role !== 'admin') {
+        loginFail('这个账号不是管理员账号，请用管理员账号或令牌登录');
+        return;
+      }
+      state.token = data.token;
+      state.adminToken = '';
       await loadAccounts();
-      localStorage.setItem(TOKEN_KEY, token);
+      localStorage.setItem(TOKEN_SESSION_KEY, data.token);
       showPanel();
     } catch (error) {
       state.token = '';
-      if (error.status === 401) {
-        $('loginError').textContent = '管理员令牌不对，请检查后再试';
-      } else {
-        $('loginError').textContent = error.message || '连接失败';
-      }
-      $('loginError').classList.remove('hidden');
+      state.adminToken = '';
+      loginFail(error.status === 401 ? '管理员令牌不对，请检查后再试' : (error.message || '连接失败'));
     } finally {
       $('loginBtn').disabled = false;
     }
   }
 
-  $('loginBtn').addEventListener('click', enterWithToken);
-  $('tokenInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') enterWithToken(); });
+  document.querySelectorAll('#loginTabs .tab').forEach(function (btn) {
+    btn.addEventListener('click', function () { setLoginMode(btn.getAttribute('data-mode')); });
+  });
+
+  $('loginBtn').addEventListener('click', enter);
+  $('tokenInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') enter(); });
+  $('adminPass').addEventListener('keydown', function (e) { if (e.key === 'Enter') enter(); });
   $('createBtn').addEventListener('click', createAccount);
   $('refreshBtn').addEventListener('click', function () {
     loadAccounts().catch(function (e) { showNotice($('listNotice'), e.message, true); });
@@ -388,7 +455,7 @@ export function renderAdminPage() {
   $('logoutBtn').addEventListener('click', logout);
 
   checkHealth();
-  if (state.token) {
+  if (state.token || state.adminToken) {
     loadAccounts().then(showPanel).catch(function () { logout(); });
   }
 })();
@@ -396,4 +463,6 @@ export function renderAdminPage() {
 </body>
 </html>`;
 }
+
+
 

@@ -201,3 +201,47 @@ test('管理员生成一次性登录码 → 客户用手机号+登录码登录 �
     assert.equal(wrongUser.status, 401);
   });
 });
+
+test('管理员账号（账号/手机号 + 密码）也能登录后台，普通账号无权访问', async () => {
+  await withServer(async (base) => {
+    const adminAcc = await admin(base, 'POST', '/admin/accounts', {
+      username: '13900139000',
+      password: 'admin888',
+      name: '管理员',
+      days: 3650,
+      role: 'admin',
+    });
+    assert.equal(adminAcc.status, 200);
+    assert.equal(adminAcc.data.account.role, 'admin');
+
+    const login = await fetch(`${base}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: '13900139000', password: 'admin888' }),
+    });
+    assert.equal(login.status, 200);
+    const loginData = await login.json();
+
+    const list = await fetch(`${base}/admin/accounts`, {
+      headers: { Authorization: `Bearer ${loginData.token}` },
+    });
+    assert.equal(list.status, 200);
+    assert.ok((await list.json()).accounts.length >= 1);
+
+    const user = await admin(base, 'POST', '/admin/accounts', {
+      username: '13700137000',
+      password: 'user8888',
+      days: 30,
+    });
+    assert.equal(user.status, 200);
+    const userLogin = await (await fetch(`${base}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: '13700137000', password: 'user8888' }),
+    })).json();
+    const denied = await fetch(`${base}/admin/accounts`, {
+      headers: { Authorization: `Bearer ${userLogin.token}` },
+    });
+    assert.equal(denied.status, 401);
+  });
+});

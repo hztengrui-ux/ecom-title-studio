@@ -95,7 +95,7 @@
 
       <footer class="login-foot">
         <span class="login-dot" aria-hidden="true"></span>
-        <span>授权服务 {{ authBaseLabel }}</span>
+        <span>服务号码 <strong class="login-phone">13221506699</strong></span>
         <span class="login-sep" aria-hidden="true">·</span>
         <span>遇到问题请联系跨多多管理员</span>
       </footer>
@@ -104,24 +104,11 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed, onMounted } from 'vue';
+import { reactive, ref } from 'vue';
 import { auth, login, loginWithCode } from '../auth.js';
-import { getJson } from '../api.js';
 
 const mode = ref('password');
 const form = reactive({ username: '', password: '', code: '' });
-const baseUrl = reactive({ value: '' });
-
-const authBaseLabel = computed(() => baseUrl.value || 'api.kuaduoduo.vip');
-
-onMounted(async () => {
-  try {
-    const data = await getJson('/api/auth/config', 8000);
-    if (data?.baseUrl) baseUrl.value = String(data.baseUrl).replace(/^https?:\/\//, '');
-  } catch {
-    // 配置读取失败不影响登录尝试
-  }
-});
 
 function switchMode(next) {
   if (auth.loggingIn) return;
@@ -159,3 +146,4 @@ async function submit() {
   }
 }
 </script>
+

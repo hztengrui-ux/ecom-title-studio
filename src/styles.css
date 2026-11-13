@@ -5457,3 +5457,9 @@ body.preview-open {
   color: var(--muted);
   line-height: 1.7;
 }
+
+.login-phone {
+  font-weight: 600;
+  color: var(--ink-2);
+  letter-spacing: 0.04em;
+}

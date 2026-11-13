@@ -68,6 +68,14 @@ EOF
 systemctl reload nginx 2>/dev/null || systemctl reload openresty 2>/dev/null || "$NGINX_BIN" -s reload
 echo "  Nginx 已加载 $DOMAIN"
 
+echo "  反代自检（本机 Host 头）..."
+PROXY_CODE=$(curl -s -o /dev/null -w '%{http_code}' -H "Host: $DOMAIN" http://127.0.0.1/health || true)
+echo "    /health -> $PROXY_CODE"
+if [ "$PROXY_CODE" != "200" ]; then
+  echo "  ⚠ 反代未生效：主配置 http{} 里没有 include 该目录。请在 nginx.conf 的 http{} 内加："
+  echo "      include $NGINX_CONF_DIR/*.conf;"
+fi
+
 echo "== 4. 申请 HTTPS 证书 =="
 if [ "$HAVE_DNS" -eq 0 ]; then
   echo "  ⚠ 跳过：$DOMAIN 未解析。解析生效后重跑本脚本即可自动签证书并开 443。"

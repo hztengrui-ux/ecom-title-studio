@@ -245,3 +245,42 @@ test('管理员账号（账号/手机号 + 密码）也能登录后台，普通�
     assert.equal(denied.status, 401);
   });
 });
+
+test('管理员可修改账号（手机号）和密码，改后可用新账号登录', async () => {
+  await withServer(async (base) => {
+    const created = await admin(base, 'POST', '/admin/accounts', {
+      username: '13600136000',
+      password: 'oldpass123',
+      name: '可改账号',
+      days: 30,
+    });
+    assert.equal(created.status, 200);
+    const id = created.data.account.id;
+
+    const updated = await admin(base, 'POST', `/admin/accounts/${id}/update`, {
+      username: '18800188000',
+      password: 'newpass123',
+    });
+    assert.equal(updated.status, 200);
+    assert.equal(updated.data.account.username, '18800188000');
+
+    const oldLogin = await fetch(`${base}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: '13600136000', password: 'oldpass123' }),
+    });
+    assert.equal(oldLogin.status, 401);
+
+    const newLogin = await fetch(`${base}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: '18800188000', password: 'newpass123' }),
+    });
+    assert.equal(newLogin.status, 200);
+
+    const conflict = await admin(base, 'POST', '/admin/accounts', {
+      username: '18800188000', password: 'x123456', days: 30,
+    });
+    assert.equal(conflict.status, 409);
+  });
+});

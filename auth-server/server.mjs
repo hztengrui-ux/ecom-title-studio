@@ -261,6 +261,32 @@ async function handleAdmin(req, res, pathname, query) {
     await writeAccounts(data);
     return json(res, 200, { ok: true, account: publicAccount(account) });
   }
+  const updateMatch = pathname.match(/^\/admin\/accounts\/([0-9a-fA-F-]{36})\/update$/);
+  if (req.method === 'POST' && updateMatch) {
+    const account = data.accounts.find((item) => item.id === updateMatch[1]);
+    if (!account) return json(res, 404, { ok: false, error: '账号不存在' });
+    const body = await readBody(req);
+    const nextUsername = String(body.username || '').trim();
+    const nextPassword = String(body.password || '');
+    if (nextUsername && nextUsername !== account.username) {
+      if (!/^[A-Za-z0-9_.-]{2,32}$/.test(nextUsername)) {
+        return json(res, 400, { ok: false, error: '账号需 2–32 位字母数字（手机号可直接填）' });
+      }
+      const conflict = data.accounts.some(
+        (item) => item.id !== account.id && String(item.username).toLowerCase() === nextUsername.toLowerCase(),
+      );
+      if (conflict) return json(res, 409, { ok: false, error: '该账号/手机号已被占用' });
+      account.username = nextUsername;
+    }
+    if (nextPassword) {
+      if (nextPassword.length < 6) return json(res, 400, { ok: false, error: '密码至少 6 位' });
+      const { salt, hash } = hashPassword(nextPassword);
+      account.salt = salt;
+      account.hash = hash;
+    }
+    await writeAccounts(data);
+    return json(res, 200, { ok: true, account: publicAccount(account) });
+  }
   const codeMatch = pathname.match(/^\/admin\/accounts\/([0-9a-fA-F-]{36})\/login-code$/);
   if (req.method === 'POST' && codeMatch) {
     const account = data.accounts.find((item) => item.id === codeMatch[1]);
@@ -401,4 +427,5 @@ if (isMain) {
     console.log(`[auth] admin token ${ADMIN_TOKEN ? '已配置' : '未配置（AUTH_ADMIN_TOKEN 为空，管理接口不可用）'}`);
   });
 }
+
 

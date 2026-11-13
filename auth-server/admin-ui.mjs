@@ -276,6 +276,7 @@ export function renderAdminPage() {
         + '<td>' + days + '</td>'
         + '<td><span class="tag ' + st.cls + '">' + st.text + '</span></td>'
         + '<td><div class="ops">'
+        + '<button class="btn tiny" data-act="edit">编辑</button>'
         + '<button class="btn tiny" data-act="code">生成登录码</button>'
         + '<button class="btn tiny" data-act="reset">重置密码</button>'
         + '<button class="' + opCls + '" data-act="' + opAction + '">' + opName + '</button>'
@@ -301,7 +302,21 @@ export function renderAdminPage() {
     btn.disabled = true;
     hide($('listNotice'));
     try {
-      if (act === 'code') {
+      if (act === 'edit') {
+        var currentUser = row.querySelector('.user').textContent.trim();
+        var nextUser = prompt('账号 / 手机号（留空表示不修改）：', currentUser);
+        if (nextUser === null) return;
+        var nextPass = prompt('新密码（留空表示不修改，至少 6 位）：', '');
+        if (nextPass === null) return;
+        nextUser = nextUser.trim();
+        if (!nextUser && !nextPass) { showNotice($('listNotice'), '没有做任何修改', true); return; }
+        var payload = {};
+        if (nextUser && nextUser !== currentUser) payload.username = nextUser;
+        if (nextPass) payload.password = nextPass;
+        if (!Object.keys(payload).length) { showNotice($('listNotice'), '没有做任何修改', true); return; }
+        await api('/admin/accounts/' + id + '/update', { method: 'POST', body: payload });
+        showNotice($('listNotice'), '已保存：' + (payload.username ? '账号改为 ' + payload.username + ' ' : '') + (payload.password ? '密码已更新' : ''));
+      } else if (act === 'code') {
         var res = await api('/admin/accounts/' + id + '/login-code', { method: 'POST', body: {} });
         showNotice($('listNotice'), '登录码：' + res.code + '（' + res.ttlMinutes + ' 分钟内有效，一次性，请发给客户）');
       } else if (act === 'extend') {

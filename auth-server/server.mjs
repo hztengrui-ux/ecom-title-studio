@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { renderAdminPage } from './admin-ui.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = process.env.AUTH_DATA_DIR || path.join(__dirname, 'data');
@@ -281,6 +282,22 @@ export function createAuthServer() {
     try {
       const url = new URL(req.url, 'http://localhost');
       const pathname = url.pathname.replace(/\/+$/, '') || '/';
+      if (req.method === 'GET' && (pathname === '/' || pathname === '/admin')) {
+        if (pathname === '/') {
+          res.writeHead(302, { Location: '/admin', 'Cache-Control': 'no-store' });
+          res.end();
+          return;
+        }
+        const html = renderAdminPage();
+        res.writeHead(200, {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Cache-Control': 'no-store',
+          'X-Content-Type-Options': 'nosniff',
+          'Referrer-Policy': 'no-referrer',
+        });
+        res.end(html);
+        return;
+      }
       if (adminRoute(pathname)) return await handleAdmin(req, res, pathname, url.searchParams);
       return await handleAuth(req, res, pathname);
     } catch (error) {

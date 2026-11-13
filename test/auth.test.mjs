@@ -138,3 +138,19 @@ test('伪造令牌、无效管理员令牌都会被拒绝', async () => {
     assert.equal(badAdmin.status, 401);
   });
 });
+
+test('管理后台页面：根路径跳转 /admin 并返回 HTML', async () => {
+  await withServer(async (base) => {
+    const root = await fetch(`${base}/`, { redirect: 'manual' });
+    assert.equal(root.status, 302);
+    assert.equal(root.headers.get('location'), '/admin');
+
+    const page = await fetch(`${base}/admin`);
+    assert.equal(page.status, 200);
+    assert.match(page.headers.get('content-type') || '', /text\/html/);
+    const html = await page.text();
+    assert.match(html, /账号授权管理/);
+    assert.match(html, /管理员登录/);
+    assert.match(html, /\/admin\/accounts/);
+  });
+});

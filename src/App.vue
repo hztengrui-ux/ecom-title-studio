@@ -270,9 +270,7 @@ onMounted(async () => {
   if (!auth.token) return;
   const result = await refresh();
   if (result.ok) {
-    startAuthWatch((message) => {
-      ElMessage.error(message || '登录已失效，请重新登录');
-    });
+    beginAuthWatch();
     return;
   }
   if (result.reason === 'denied') {
@@ -281,29 +279,62 @@ onMounted(async () => {
   }
 // 网络异常：保留登录态但提示离线，后续 30 分钟校验会自动恢复
   ElMessage.warning('暂时连不上授权服务器，已进入离线模式，稍后自动重试');
-  startAuthWatch((message) => {
-    ElMessage.error(message || '登录已失效，请重新登录');
-  });
+  beginAuthWatch();
 });
 
 let updateTimer = null;
 
+async function recheckNow() {
+  if (!auth.token) return;
+  const result = await refresh();
+  if (!result.ok && result.reason === 'denied') {
+    ElMessage.error(result.message || '登录已失效，请重新登录');
+  }
+}
+
+function onWindowVisible() {
+  if (document.visibilityState === 'visible') recheckNow();
+}
+
 onMounted(() => {
+  window.addEventListener('focus', recheckNow);
+  document.addEventListener('visibilitychange', onWindowVisible);
   checkUpdate();
   updateTimer = setInterval(checkUpdate, 4 * 60 * 60 * 1000);
 });
 
+function beginAuthWatch() {
+  startAuthWatch((message) => {
+    ElMessage.error(message || '登录已失效，请重新登录');
+  });
+}
+
 watch(
   () => auth.token,
-  (token) => {
-    if (!token) update.hasUpdate = false;
+  async (token) => {
+    if (!token) {
+      update.hasUpdate = false;
+      stopAuthWatch();
+      return;
+    }
+    const result = await refresh();
+    if (result.ok) beginAuthWatch();
+    else if (result.reason === 'denied') {
+      ElMessage.error(result.message || '登录已失效，请重新登录');
+    } else {
+      beginAuthWatch();
+    }
   },
 );
 
 onBeforeUnmount(() => {
   stopAuthWatch();
   if (updateTimer) clearInterval(updateTimer);
+  window.removeEventListener('focus', recheckNow);
+  document.removeEventListener('visibilitychange', onWindowVisible);
 });
 </script>
+
+
 
 

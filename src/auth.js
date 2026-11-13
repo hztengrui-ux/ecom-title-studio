@@ -1,10 +1,11 @@
 import { reactive } from 'vue';
 import { requestJson } from './api.js';
 
-// 在线账号授权：桌面版启动 / 每 30 分钟向 https://api.kuaduoduo.vip 校验一次
+// 在线账号授权：桌面版启动 / 每 60 秒向 https://api.kuaduoduo.vip 校验一次（切回窗口时也会立即校验）
 // 令牌与账号信息只存本地 localStorage，退出登录即清除
 const STORAGE_KEY = 'tw.auth.v1';
-const CHECK_INTERVAL_MS = 30 * 60 * 1000;
+// 停用/到期后最迟约 1 分钟内在客户端生效
+const CHECK_INTERVAL_MS = 60 * 1000;
 
 export const auth = reactive({
   token: '',
@@ -165,3 +166,4 @@ export function stopAuthWatch() {
     timer = null;
   }
 }
+

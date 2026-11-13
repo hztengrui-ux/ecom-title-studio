@@ -162,7 +162,7 @@ export function renderAdminPage() {
 
     <section class="card">
       <h2>账号列表</h2>
-      <p class="lead">客户可用「账号/手机号 + 密码」登录，也可用这里的「生成登录码」做一次性免密登录（10 分钟有效）。停用后客户端最迟 30 分钟内被退回登录页。</p>
+      <p class="lead">客户可用「账号/手机号 + 密码」登录，也可用这里的「生成登录码」做一次性免密登录（10 分钟有效）。停用后约 1 分钟内客户端被退回登录页。</p>
       <div style="overflow-x:auto">
         <table>
           <thead>
@@ -323,7 +323,7 @@ export function renderAdminPage() {
         await api('/admin/accounts/' + id + '/extend', { method: 'POST', body: { days: 30 } });
         showNotice($('listNotice'), '已续期 30 天，客户端下次校验后生效。');
       } else if (act === 'disable') {
-        if (!confirm('停用后该客户最迟 30 分钟内会被退回登录页，确定停用？')) return;
+        if (!confirm('停用后该客户约 1 分钟内会被退回登录页，确定停用？')) return;
         await api('/admin/accounts/' + id + '/disable', { method: 'POST', body: {} });
         showNotice($('listNotice'), '已停用该账号。');
       } else if (act === 'enable') {

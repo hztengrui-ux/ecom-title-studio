@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <LoginView v-if="auth.ready && !auth.token" />
   <div v-else class="app" :class="`mode-${state.mode}`">
     <aside class="rail" aria-label="主导航">
@@ -17,13 +17,30 @@
       </nav>
 
       <div class="rail-foot">
+        <button v-if="update.hasUpdate" type="button" class="rail-item rail-update" @click="openUpdateDialog">
+          <el-icon><Download /></el-icon><span>更新</span>
+          <i class="rail-update-dot" aria-hidden="true"></i>
+        </button>
         <button type="button" class="rail-item" @click="state.ui.help = true">
           <el-icon><InfoFilled /></el-icon><span>说明</span>
         </button>
         <button type="button" class="rail-item" @click="state.ui.settings = true">
           <el-icon><Setting /></el-icon><span>设置</span>
         </button>
-        <div class="rail-avatar" title="本地工作台">TW</div>
+        <el-dropdown v-if="auth.account" trigger="click" placement="right-end" @command="handleAccount">
+          <button type="button" class="rail-account" :class="{ 'is-offline': auth.offline }" :title="accountTitle">
+            <span class="rail-account-avatar">{{ accountInitial }}</span>
+            <span class="rail-account-name">{{ auth.account.name || auth.account.username }}</span>
+            <span class="rail-account-days">{{ daysLeft() === null ? '—' : daysLeft() + ' 天' }}</span>
+          </button>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="recheck">重新校验授权</el-dropdown-item>
+              <el-dropdown-item v-if="update.hasUpdate" command="update" divided>发现新版本 {{ update.latest }}</el-dropdown-item>
+              <el-dropdown-item divided command="logout">退出登录</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
       </div>
     </aside>
 
@@ -39,19 +56,7 @@
         </div>
 
         <div class="topbar-right">
-          <el-dropdown v-if="auth.account" trigger="click" @command="handleAccount">
-            <button type="button" class="account-chip" :class="{ 'is-offline': auth.offline }" :title="accountTitle">
-              <span class="account-dot" aria-hidden="true"></span>
-              <span class="account-name">{{ accountLabel() }}</span>
-              <span class="account-days">{{ daysLeft() === null ? '—' : `剩 ${daysLeft()} 天` }}</span>
-            </button>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item command="recheck">重新校验授权</el-dropdown-item>
-                <el-dropdown-item divided command="logout">退出登录</el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
+
           <button type="button" class="model-pill" :data-tone="state.settings.provider === 'demo' ? 'demo' : 'live'" @click="state.ui.settings = true">
             <i aria-hidden="true"></i>
             <span>{{ modelLabel }}</span>
@@ -120,13 +125,26 @@
     <RulesDrawer />
     <HistoryDrawer />
     <HelpDialog />
-    <PreviewDialog />
+<PreviewDialog />
+
+    <el-dialog v-model="updateDialog" title="发现新版本" width="430px" append-to-body align-center>
+      <div class="update-body">
+        <p class="update-line">当前版本 <strong>{{ update.current }}</strong> → 最新版本 <strong>{{ update.latest }}</strong></p>
+        <p v-if="update.notes" class="update-notes">{{ update.notes }}</p>
+        <p class="update-tip">点击「打开下载页」下载最新安装包，解压覆盖原程序即可；设置、历史和登录状态都会保留。</p>
+      </div>
+      <template #footer>
+        <el-button @click="dismissUpdate">稍后提醒</el-button>
+        <el-button type="primary" @click="downloadUpdate">打开下载页</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, onBeforeUnmount } from 'vue';
+import { computed, reactive, ref, watch, onMounted, onBeforeUnmount } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
+import { getJson } from './api.js';
 import { state, loadMeta } from './store.js';
 import {
   auth,
@@ -134,7 +152,6 @@ import {
   refresh,
   logout,
   daysLeft,
-  accountLabel,
   startAuthWatch,
   stopAuthWatch,
 } from './auth.js';
@@ -159,6 +176,52 @@ const accountTitle = computed(() => {
     : '—';
   return `账号 ${auth.account.username} · 到期 ${expire}`;
 });
+
+const accountInitial = computed(() => {
+  const label = auth.account?.name || auth.account?.username || '客';
+  return String(label).trim().slice(0, 1).toUpperCase();
+});
+
+// ---- 在线更新 ----
+const UPDATE_DISMISS_KEY = 'tw.update.dismissed';
+const update = reactive({ current: '', latest: '', notes: '', url: '', hasUpdate: false });
+const updateDialog = ref(false);
+
+async function checkUpdate() {
+  try {
+    const data = await getJson('/api/update/check', 12000);
+    if (!data?.ok) return;
+    update.current = data.current || '';
+    update.latest = data.latest || '';
+    update.notes = data.notes || '';
+    update.url = data.url || '';
+    update.hasUpdate = Boolean(data.hasUpdate);
+    if (update.hasUpdate && localStorage.getItem(UPDATE_DISMISS_KEY) !== update.latest) {
+      updateDialog.value = true;
+    }
+  } catch {
+    // 更新检查失败不影响使用
+  }
+}
+
+function openUpdateDialog() {
+  updateDialog.value = true;
+}
+
+function dismissUpdate() {
+  if (update.latest) localStorage.setItem(UPDATE_DISMISS_KEY, update.latest);
+  updateDialog.value = false;
+}
+
+async function downloadUpdate() {
+  const url = update.url || 'https://github.com/hztengrui-ux/ecom-title-studio/releases/latest';
+  try {
+    if (window.desktop?.openExternal) await window.desktop.openExternal(url);
+    else window.open(url, '_blank');
+  } finally {
+    updateDialog.value = false;
+  }
+}
 
 function setMode(mode) {
   state.mode = mode;
@@ -189,6 +252,10 @@ async function handleAccount(command) {
     ElMessage.success('已退出登录');
     return;
   }
+  if (command === 'update') {
+    openUpdateDialog();
+    return;
+  }
   if (command === 'recheck') {
     const result = await refresh();
     if (result.ok) ElMessage.success('授权有效，已刷新');
@@ -212,12 +279,31 @@ onMounted(async () => {
     auth.error = result.message || '登录已失效，请重新登录';
     return;
   }
-  // 网络异常：保留登录态但提示离线，后续 30 分钟校验会自动恢复
+// 网络异常：保留登录态但提示离线，后续 30 分钟校验会自动恢复
   ElMessage.warning('暂时连不上授权服务器，已进入离线模式，稍后自动重试');
   startAuthWatch((message) => {
     ElMessage.error(message || '登录已失效，请重新登录');
   });
 });
 
-onBeforeUnmount(stopAuthWatch);
+let updateTimer = null;
+
+onMounted(() => {
+  checkUpdate();
+  updateTimer = setInterval(checkUpdate, 4 * 60 * 60 * 1000);
+});
+
+watch(
+  () => auth.token,
+  (token) => {
+    if (!token) update.hasUpdate = false;
+  },
+);
+
+onBeforeUnmount(() => {
+  stopAuthWatch();
+  if (updateTimer) clearInterval(updateTimer);
+});
 </script>
+
+

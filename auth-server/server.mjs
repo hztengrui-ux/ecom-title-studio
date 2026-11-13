@@ -1,4 +1,4 @@
-import http from 'node:http';
+﻿import http from 'node:http';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
@@ -10,6 +10,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = process.env.AUTH_DATA_DIR || path.join(__dirname, 'data');
 const ACCOUNTS_FILE = path.join(DATA_DIR, 'accounts.json');
 const SECRET_FILE = path.join(DATA_DIR, 'secret.key');
+const UPDATE_FILE = process.env.AUTH_UPDATE_FILE || path.join(__dirname, 'update.json');
 const PORT = Number(process.env.AUTH_PORT) || 8090;
 const TOKEN_TTL_HOURS = Number(process.env.AUTH_TOKEN_TTL_HOURS) || 12;
 const DEFAULT_DAYS = Number(process.env.AUTH_DEFAULT_DAYS) || 30;
@@ -342,6 +343,15 @@ async function handleAuth(req, res, pathname) {
     if (block) return json(res, 403, { ok: false, error: block });
     return json(res, 200, { ok: true, account: publicAccount(account) });
   }
+if (req.method === 'GET' && pathname === '/update/latest') {
+    let payload = { ok: true, version: '', notes: '', url: '', publishedAt: '' };
+    try {
+      payload = { ...payload, ...JSON.parse(fs.readFileSync(UPDATE_FILE, 'utf8')) };
+    } catch {
+      // 没有 update.json 时返回空版本，客户端视为无更新
+    }
+    return json(res, 200, payload);
+  }
   if (req.method === 'GET' && pathname === '/health') {
     return json(res, 200, { ok: true, service: 'kuaduo-auth', time: new Date().toISOString() });
   }
@@ -391,3 +401,4 @@ if (isMain) {
     console.log(`[auth] admin token ${ADMIN_TOKEN ? '已配置' : '未配置（AUTH_ADMIN_TOKEN 为空，管理接口不可用）'}`);
   });
 }
+

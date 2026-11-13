@@ -20,9 +20,22 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_PUBLIC_DIR = path.join(__dirname, 'public');
 const MAX_BODY_BYTES = 16 * 1024 * 1024;
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
-const VERSION = '2.1.0';
+const VERSION = '2.2.0';
 // 在线账号授权服务（腾讯云轻量服务器 · Nginx 反代 127.0.0.1:8090）
 const DEFAULT_AUTH_BASE = 'https://api.kuaduoduo.vip';
+
+function compareVersion(a, b) {
+  const pa = String(a || '').split('.').map((n) => Number(n) || 0);
+  const pb = String(b || '').split('.').map((n) => Number(n) || 0);
+  const len = Math.max(pa.length, pb.length);
+  for (let i = 0; i < len; i += 1) {
+    const x = pa[i] || 0;
+    const y = pb[i] || 0;
+    if (x > y) return 1;
+    if (x < y) return -1;
+  }
+  return 0;
+}
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -438,6 +451,26 @@ export function createHttpServer({
       return;
     }
 
+if (pathname === '/api/update/check' && req.method === 'GET') {
+      try {
+        const result = await forwardAuth(authBase, '/update/latest', {});
+        const payload = result.payload || {};
+        const latest = String(payload.version || '');
+        sendJson(res, 200, {
+          ok: true,
+          current: VERSION,
+          latest,
+          hasUpdate: Boolean(latest) && compareVersion(latest, VERSION) > 0,
+          notes: String(payload.notes || ''),
+          url: String(payload.url || ''),
+          publishedAt: String(payload.publishedAt || ''),
+        });
+      } catch {
+        sendJson(res, 200, { ok: true, current: VERSION, latest: '', hasUpdate: false });
+      }
+      return;
+    }
+
     if (pathname === '/api/auth/config' && req.method === 'GET') {
       sendJson(res, 200, { ok: true, baseUrl: authBase, source: 'online' });
       return;
@@ -598,3 +631,4 @@ if (isMain) {
     process.exitCode = 1;
   });
 }
+

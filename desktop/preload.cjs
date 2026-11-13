@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 const { contextBridge, ipcRenderer, webUtils } = require('electron');
 
@@ -18,5 +18,7 @@ contextBridge.exposeInMainWorld('desktop', {
     }
   },
   openPath: (target) => ipcRenderer.invoke('desktop:open-path', target),
+  openExternal: (url) => ipcRenderer.invoke('desktop:open-external', url),
   menuAction: (action) => ipcRenderer.invoke('desktop:menu-action', action),
 });
+

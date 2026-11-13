@@ -551,3 +551,34 @@ test('一次性登录码代理：生成后可用且只能使用一次', async ()
     await close(upstream);
   }
 });
+
+test('更新检查：服务器有更高版本时提示更新，否则不提示', async () => {
+  let latestVersion = '9.9.9';
+  const upstream = http.createServer((req, res) => {
+    const url = new URL(req.url, 'http://127.0.0.1');
+    if (url.pathname === '/update/latest') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, version: latestVersion, notes: '测试更新说明', url: 'https://example.com/download' }));
+      return;
+    }
+    res.writeHead(404); res.end('{}');
+  });
+  const upstreamBase = await listen(upstream);
+  const app = createHttpServer({ authBase: upstreamBase });
+  const base = await listen(app);
+  try {
+    const newer = await (await fetch(`${base}/api/update/check`)).json();
+    assert.equal(newer.ok, true);
+    assert.equal(newer.current, '2.2.0');
+    assert.equal(newer.latest, '9.9.9');
+    assert.equal(newer.hasUpdate, true);
+    assert.match(newer.notes, /测试/);
+
+    latestVersion = '0.0.1';
+    const older = await (await fetch(`${base}/api/update/check`)).json();
+    assert.equal(older.hasUpdate, false);
+  } finally {
+    await close(app);
+    await close(upstream);
+  }
+});

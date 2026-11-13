@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 const { app, BrowserWindow, Menu, dialog, ipcMain, shell, screen } = require('electron');
 const path = require('node:path');
@@ -568,6 +568,13 @@ function registerIpc() {
     return { ok: true, path: target, writtenImages, skippedImages };
   });
 
+ipcMain.handle('desktop:open-external', async (_event, url) => {
+    const target = String(url || '').trim();
+    if (!/^https?:\/\//i.test(target)) return '只支持 http(s) 链接';
+    await shell.openExternal(target);
+    return 'ok';
+  });
+
   ipcMain.handle('desktop:open-path', async (_event, target) => {
     if (typeof target !== 'string' || !target.trim()) return '路径为空';
     if (!fs.existsSync(target)) return '路径不存在';
@@ -668,3 +675,4 @@ process.on('uncaughtException', (error) => {
 process.on('unhandledRejection', (error) => {
   console.error('[main] unhandledRejection', error);
 });
+

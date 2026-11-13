@@ -5356,3 +5356,104 @@ body.preview-open {
   line-height: 1.6;
   color: var(--muted-2);
 }
+
+/* ---------- 左侧栏：更新与账号 ---------- */
+.rail-update {
+  position: relative;
+}
+
+.rail-update-dot {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 2px rgba(210, 85, 60, 0.25);
+}
+
+.rail-account {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  padding: 6px 4px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: rgba(255, 249, 238, 0.72);
+  cursor: pointer;
+  transition: background 0.16s ease, color 0.16s ease;
+}
+
+.rail-account:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff9ee;
+}
+
+.rail-account-avatar {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff8ef;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.rail-account.is-offline .rail-account-avatar {
+  background: var(--amber);
+}
+
+.rail-account-name {
+  max-width: 58px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+.rail-account-days {
+  font-size: 9px;
+  color: rgba(255, 249, 238, 0.45);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 更新弹窗 ---------- */
+.update-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.update-line {
+  margin: 0;
+  font-size: 14px;
+}
+
+.update-line strong {
+  color: var(--accent-deep);
+}
+
+.update-notes {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f7f1e6;
+  border: 1px dashed var(--line);
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.update-tip {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.7;
+}

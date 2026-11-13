@@ -20,7 +20,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_PUBLIC_DIR = path.join(__dirname, 'public');
 const MAX_BODY_BYTES = 16 * 1024 * 1024;
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
-const VERSION = '2.2.2';
+const VERSION = '2.2.3';
 // 在线账号授权服务（腾讯云轻量服务器 · Nginx 反代 127.0.0.1:8090）
 const DEFAULT_AUTH_BASE = 'https://api.kuaduoduo.vip';
 

@@ -17,9 +17,15 @@
       </nav>
 
       <div class="rail-foot">
-        <button v-if="update.hasUpdate" type="button" class="rail-item rail-update" @click="openUpdateDialog">
+        <button
+          type="button"
+          class="rail-item rail-update"
+          :class="{ 'is-new': update.hasUpdate }"
+          :title="update.hasUpdate ? `发现新版本 ${update.latest}，点击查看` : '检查更新'"
+          @click="onUpdateClick"
+        >
           <el-icon><Download /></el-icon><span>更新</span>
-          <i class="rail-update-dot" aria-hidden="true"></i>
+          <i v-if="update.hasUpdate" class="rail-update-dot" aria-hidden="true"></i>
         </button>
         <button type="button" class="rail-item" @click="state.ui.help = true">
           <el-icon><InfoFilled /></el-icon><span>说明</span>
@@ -190,7 +196,7 @@ const updateDialog = ref(false);
 async function checkUpdate() {
   try {
     const data = await getJson('/api/update/check', 12000);
-    if (!data?.ok) return;
+    if (!data?.ok) return update.hasUpdate;
     update.current = data.current || '';
     update.latest = data.latest || '';
     update.notes = data.notes || '';
@@ -199,8 +205,22 @@ async function checkUpdate() {
     if (update.hasUpdate && localStorage.getItem(UPDATE_DISMISS_KEY) !== update.latest) {
       updateDialog.value = true;
     }
+    return update.hasUpdate;
   } catch {
     // 更新检查失败不影响使用
+    return update.hasUpdate;
+  }
+}
+
+async function onUpdateClick() {
+  if (update.hasUpdate) {
+    updateDialog.value = true;
+    return;
+  }
+  ElMessage.info('正在检查更新…');
+  await checkUpdate();
+  if (!update.hasUpdate) {
+    ElMessage.success(`已是最新版本${update.current ? ' ' + update.current : ''}`);
   }
 }
 
@@ -334,6 +354,7 @@ onBeforeUnmount(() => {
   document.removeEventListener('visibilitychange', onWindowVisible);
 });
 </script>
+
 
 
 

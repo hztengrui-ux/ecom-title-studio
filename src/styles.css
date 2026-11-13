@@ -5463,3 +5463,23 @@ body.preview-open {
   color: var(--ink-2);
   letter-spacing: 0.04em;
 }
+
+/* 有新版本时左下角「更新」按钮呼吸闪烁 */
+.rail-update.is-new {
+  animation: rail-update-breathe 1.6s ease-in-out infinite;
+  color: #ffd9cf;
+}
+
+.rail-update.is-new .rail-update-dot {
+  animation: rail-update-dot 1.2s ease-in-out infinite;
+}
+
+@keyframes rail-update-breathe {
+  0%, 100% { background: rgba(210, 85, 60, 0.12); }
+  50% { background: rgba(210, 85, 60, 0.32); }
+}
+
+@keyframes rail-update-dot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.35); opacity: 0.75; }
+}

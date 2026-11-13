@@ -965,14 +965,11 @@ export async function exportBatchExcel() {
 }
 
 function buildBatchCsv() {
-  // 与 Excel 导出保持一致：只给上架要用的 5 列。
-  const rows = [['SKU', '状态', '商品名', '品类', '主标题']];
+  // 与 Excel 导出保持一致：只给上架直接要用的 2 列（SKU + 主标题）。
+  const rows = [['SKU', '主标题']];
   selectedExportItems().forEach((item) => {
     rows.push([
       item.sku || item.name,
-      item.status === 'done' ? '完成' : item.status === 'error' ? '失败' : '待处理',
-      item.result?.product?.name || '',
-      item.result?.product?.category || '',
       item.result?.titles?.[0]?.text || '',
     ]);
   });

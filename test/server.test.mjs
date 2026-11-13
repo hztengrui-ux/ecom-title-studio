@@ -295,7 +295,7 @@ test('批量 Excel 接口返回有效 xlsx 文件', async () => {
     assert.equal(response.status, 200);
     assert.match(response.headers.get('content-type') || '', /spreadsheetml/);
     const buffer = Buffer.from(await response.arrayBuffer());
-    assert.ok(buffer.length > 5000);
+    assert.ok(buffer.length > 2000);
     assert.equal(buffer.subarray(0, 2).toString('utf8'), 'PK');
   } finally {
     await close(app);

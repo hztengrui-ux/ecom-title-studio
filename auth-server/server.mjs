@@ -1,4 +1,4 @@
-﻿import http from 'node:http';
+import http from 'node:http';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
@@ -11,6 +11,7 @@ const DATA_DIR = process.env.AUTH_DATA_DIR || path.join(__dirname, 'data');
 const ACCOUNTS_FILE = path.join(DATA_DIR, 'accounts.json');
 const SECRET_FILE = path.join(DATA_DIR, 'secret.key');
 const UPDATE_FILE = process.env.AUTH_UPDATE_FILE || path.join(__dirname, 'update.json');
+const DOWNLOAD_DIR = process.env.AUTH_DOWNLOAD_DIR || path.join(__dirname, 'download');
 const PORT = Number(process.env.AUTH_PORT) || 8090;
 const TOKEN_TTL_HOURS = Number(process.env.AUTH_TOKEN_TTL_HOURS) || 12;
 const DEFAULT_DAYS = Number(process.env.AUTH_DEFAULT_DAYS) || 30;
@@ -384,6 +385,37 @@ if (req.method === 'GET' && pathname === '/update/latest') {
   return json(res, 404, { ok: false, error: '未知接口' });
 }
 
+function listDownloads() {
+  try {
+    return fs
+      .readdirSync(DOWNLOAD_DIR)
+      .filter((name) => /^[\w.-]+\.(zip|exe)$/i.test(name))
+      .map((name) => {
+        const full = path.join(DOWNLOAD_DIR, name);
+        const stat = fs.statSync(full);
+        return { name, size: stat.size, mtime: stat.mtime.toISOString() };
+      })
+      .sort((a, b) => b.mtime.localeCompare(a.mtime));
+  } catch {
+    return [];
+  }
+}
+
+function serveDownload(res, name) {
+  if (!/^[\w.-]+\.(zip|exe)$/i.test(name)) return false;
+  const full = path.join(DOWNLOAD_DIR, name);
+  if (!fs.existsSync(full)) return false;
+  const stat = fs.statSync(full);
+  res.writeHead(200, {
+    'Content-Type': 'application/octet-stream',
+    'Content-Length': stat.size,
+    'Content-Disposition': 'attachment; filename="' + name + '"',
+    'Cache-Control': 'no-store',
+  });
+  fs.createReadStream(full).pipe(res);
+  return true;
+}
+
 export function createAuthServer() {
   loadSecret();
   return http.createServer(async (req, res) => {
@@ -409,6 +441,14 @@ export function createAuthServer() {
         });
         res.end(html);
         return;
+      }
+      if (req.method === 'GET' && (pathname === '/download/list' || pathname === '/download')) {
+        return json(res, 200, { ok: true, files: listDownloads() });
+      }
+      if (req.method === 'GET' && pathname.startsWith('/download/')) {
+        const name = decodeURIComponent(pathname.slice('/download/'.length));
+        if (serveDownload(res, name)) return;
+        return json(res, 404, { ok: false, error: '文件不存在' });
       }
       if (adminRoute(pathname)) return await handleAdmin(req, res, pathname, url.searchParams);
       return await handleAuth(req, res, pathname);

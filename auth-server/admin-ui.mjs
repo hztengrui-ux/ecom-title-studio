@@ -1,4 +1,4 @@
-﻿// 跨多多授权服务 · 管理后台页面（单文件内嵌 HTML，无外部依赖）
+// 跨多多授权服务 · 管理后台页面（单文件内嵌 HTML，无外部依赖）
 
 export function renderAdminPage() {
   return `<!DOCTYPE html>
@@ -91,6 +91,19 @@ export function renderAdminPage() {
   .notice.bad { background:#fdf1ed; border-color:#e6c4ba; color:var(--danger); }
   .notice code { font-family:var(--sans); font-weight:700; letter-spacing:.04em; }
   .hidden { display:none !important; }
+  .download-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 2px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .download-row:last-child { border-bottom: 0; }
+  .download-row strong { display: block; font-size: 13px; }
+  .download-row .sub { font-size: 12px; color: var(--muted-2); margin-top: 2px; }
+  .download-row .btn { text-decoration: none; display: inline-flex; align-items: center; }
+
   @media (max-width:760px) {
     .stats { grid-template-columns:repeat(2,1fr); }
     th:nth-child(3), td:nth-child(3) { display:none; }
@@ -158,6 +171,13 @@ export function renderAdminPage() {
         <button class="btn" id="refreshBtn" type="button">刷新列表</button>
       </div>
       <p class="notice hidden" id="createNotice"></p>
+    </section>
+
+    <section class="card">
+      <h2>客户端下载</h2>
+      <p class="lead">最新安装包放在服务器上，客户可直接下载；把链接发给客户即可。</p>
+      <div id="downloadList" class="download-list"><span class="sub">加载中…</span></div>
+      <p class="notice hidden" id="downloadNotice"></p>
     </section>
 
     <section class="card">
@@ -378,6 +398,32 @@ export function renderAdminPage() {
     }
   }
 
+  async function loadDownloads() {
+    var box = $('downloadList');
+    if (!box) return;
+    try {
+      var resp = await fetch('/download/list');
+      var data = await resp.json();
+      var files = (data && data.files) || [];
+      if (!files.length) {
+        box.innerHTML = '<span class="sub">还没有安装包。把安装包放到服务器 /opt/kuaduo-auth/download/ 后刷新即可。</span>';
+        return;
+      }
+      box.innerHTML = files
+        .map(function (f) {
+          var mb = (f.size / 1048576).toFixed(1) + ' MB';
+          return (
+            '<div class="download-row"><div><strong>' + esc(f.name) + '</strong>' +
+            '<span class="sub">' + mb + ' · ' + fmtDate(f.mtime) + '</span></div>' +
+            '<a class="btn tiny" href="/download/' + encodeURIComponent(f.name) + '" target="_blank" rel="noopener">下载</a></div>'
+          );
+        })
+        .join('');
+    } catch (e) {
+      box.innerHTML = '<span class="sub">下载列表加载失败，稍后刷新重试</span>';
+    }
+  }
+
   function showPanel() {
     loginCard.classList.add('hidden');
     panel.classList.remove('hidden');
@@ -468,6 +514,8 @@ export function renderAdminPage() {
     loadAccounts().catch(function (e) { showNotice($('listNotice'), e.message, true); });
   });
   $('logoutBtn').addEventListener('click', logout);
+
+  loadDownloads();
 
   checkHealth();
   if (state.token || state.adminToken) {

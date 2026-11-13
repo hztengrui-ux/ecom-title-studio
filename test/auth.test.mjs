@@ -154,3 +154,50 @@ test('管理后台页面：根路径跳转 /admin 并返回 HTML', async () => {
     assert.match(html, /\/admin\/accounts/);
   });
 });
+
+test('管理员生成一次性登录码 → 客户用手机号+登录码登录 → 二次使用被拒', async () => {
+  await withServer(async (base) => {
+    const created = await admin(base, 'POST', '/admin/accounts', {
+      username: '13800138000',
+      password: 'secret123',
+      name: '手机客户',
+      days: 30,
+    });
+    assert.equal(created.status, 200);
+    const id = created.data.account.id;
+
+    const codeResp = await fetch(`${base}/admin/accounts/${id}/login-code`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Token': 'test-admin-token' },
+      body: '{}',
+    });
+    assert.equal(codeResp.status, 200);
+    const codeData = await codeResp.json();
+    assert.match(codeData.code, /^\d{6}$/);
+    assert.equal(codeData.ttlMinutes, 10);
+
+    const login = await fetch(`${base}/auth/login-code`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: '13800138000', code: codeData.code }),
+    });
+    assert.equal(login.status, 200);
+    const loginData = await login.json();
+    assert.ok(loginData.token);
+    assert.equal(loginData.account.username, '13800138000');
+
+    const reuse = await fetch(`${base}/auth/login-code`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: '13800138000', code: codeData.code }),
+    });
+    assert.equal(reuse.status, 401);
+
+    const wrongUser = await fetch(`${base}/auth/login-code`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: '13800138000', code: '000000' }),
+    });
+    assert.equal(wrongUser.status, 401);
+  });
+});

@@ -500,3 +500,54 @@ test('授权服务地址配置接口', async () => {
     await close(app);
   }
 });
+
+test('一次性登录码代理：生成后可用且只能使用一次', async () => {
+  const upstream = http.createServer((req, res) => {
+    const url = new URL(req.url, 'http://127.0.0.1');
+    const send = (status, payload) => { res.writeHead(status, {'Content-Type':'application/json'}); res.end(JSON.stringify(payload)); };
+    if (url.pathname === '/auth/login-code' && req.method === 'POST') {
+      let body = '';
+      req.on('data', (c) => { body += c; });
+      req.on('end', () => {
+        const { username, code } = JSON.parse(body || '{}');
+        if (username === '13800138000' && code === '482913') {
+          send(200, { ok: true, token: 'tok-code', account: { id: 'acc-9', username, name: '手机客户', role: 'user', expiresAt: '2026-12-13T00:00:00.000Z', daysLeft: 30, disabled: false } });
+          return;
+        }
+        send(401, { ok: false, error: '登录码不正确或已失效' });
+      });
+      return;
+    }
+    send(404, { ok: false, error: '未知接口' });
+  });
+  const upstreamBase = await listen(upstream);
+  const app = createHttpServer({ authBase: upstreamBase });
+  const base = await listen(app);
+  try {
+    const ok = await fetch(`${base}/api/auth/login-code`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: '13800138000', code: '482913' }),
+    });
+    const okData = await ok.json();
+    assert.equal(ok.status, 200);
+    assert.equal(okData.token, 'tok-code');
+
+    const bad = await fetch(`${base}/api/auth/login-code`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: '13800138000', code: '111111' }),
+    });
+    assert.equal(bad.status, 401);
+
+    const shortCode = await fetch(`${base}/api/auth/login-code`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: '13800138000', code: '12' }),
+    });
+    assert.equal(shortCode.status, 400);
+  } finally {
+    await close(app);
+    await close(upstream);
+  }
+});

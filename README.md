@@ -1,4 +1,4 @@
-# 跨多多标题工坊 · 电商标题识图生成
+﻿# 跨多多标题工坊 · 电商标题识图生成
 
 [![Release](https://img.shields.io/github/v/release/hztengrui-ux/ecom-title-studio?display_name=tag)](https://github.com/hztengrui-ux/ecom-title-studio/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/hztengrui-ux/ecom-title-studio/total)](https://github.com/hztengrui-ux/ecom-title-studio/releases)
@@ -40,6 +40,8 @@
 - 账号到期、被管理员停用后，下一次校验即被拒绝并退回登录页，提示原因（即时收回，无需重新分发安装包）。
 - 默认授权 30 天；续期、停用、改密由管理员在服务器上执行 `node admin.mjs`（`extend` / `disable` / `enable` / `reset`）。
 - 顶部账号胶囊显示「账号（姓名）· 剩 N 天」，点开可「重新校验授权 / 退出登录」。
+- 支持两种登录方式：**账号 / 手机号 + 密码**；或管理员在后台生成的**一次性登录码**（6 位数字，10 分钟内有效，只能使用一次）。登录页可直接切换。
+- 管理员后台：https://api.kuaduoduo.vip/admin （管理员令牌登录；建号、续期、停用/启用、重置密码、生成登录码）。
 
 ### Windows SmartScreen 提示
 
@@ -426,6 +428,7 @@ ecom-title-studio/
 ## License
 
 内部工具示例，未附带开源许可证。使用前请确认所选模型服务与商品图片的授权范围。
+
 
 
 

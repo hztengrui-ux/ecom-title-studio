@@ -5315,3 +5315,44 @@ body.preview-open {
   color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
+
+/* ---------- 登录方式切换 ---------- */
+.login-tabs {
+  display: flex;
+  gap: 6px;
+  margin: 18px 0 20px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: #f7f1e6;
+}
+
+.login-tab {
+  flex: 1;
+  height: 34px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-family: var(--sans);
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.login-tab:hover {
+  color: var(--ink-2);
+}
+
+.login-tab.is-active {
+  background: #fffdf8;
+  color: var(--ink);
+  box-shadow: 0 1px 3px rgba(63, 50, 32, 0.12);
+}
+
+.login-hint {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--muted-2);
+}

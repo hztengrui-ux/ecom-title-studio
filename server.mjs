@@ -472,6 +472,35 @@ export function createHttpServer({
       return;
     }
 
+    if (pathname === '/api/auth/login-code' && req.method === 'POST') {
+      try {
+        const body = await readJsonBody(req);
+        const username = String(body.username || '').trim();
+        const code = String(body.code || '').replace(/\s+/g, '');
+        if (!username || !/^\d{6}$/.test(code)) {
+          sendError(res, 400, 'AUTH_CODE_INVALID', '请输入账号/手机号和 6 位登录码');
+          return;
+        }
+        const result = await forwardAuth(authBase, '/auth/login-code', {
+          method: 'POST',
+          body: { username, code },
+        });
+        if (result.status === 200 && result.payload?.ok) {
+          sendJson(res, 200, result.payload);
+          return;
+        }
+        const message = result.payload?.error || '登录码不正确或已失效';
+        sendJson(res, result.status >= 400 ? result.status : 401, {
+          ok: false,
+          error: { code: 'AUTH_CODE_DENIED', message },
+        });
+      } catch (error) {
+        console.error('[auth/login-code]', error?.message || error);
+        sendError(res, 503, 'AUTH_UNAVAILABLE', '无法连接授权服务器，请检查网络或稍后再试');
+      }
+      return;
+    }
+
     if (pathname === '/api/auth/me' && req.method === 'GET') {
       try {
         const header = String(req.headers.authorization || '');

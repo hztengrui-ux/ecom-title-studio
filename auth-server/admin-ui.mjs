@@ -1,4 +1,4 @@
-// 跨多多授权服务 · 管理后台页面（单文件内嵌 HTML，无外部依赖）
+﻿// 跨多多授权服务 · 管理后台页面（单文件内嵌 HTML，无外部依赖）
 
 export function renderAdminPage() {
   return `<!DOCTYPE html>
@@ -131,7 +131,7 @@ export function renderAdminPage() {
       <h2>新建账号</h2>
       <p class="lead">密码留空会自动生成一个 10 位初始密码，创建后只显示一次，请复制发给客户。</p>
       <div class="row-actions">
-        <div class="field"><label>账号</label><input type="text" id="newUser" placeholder="如 client02" /></div>
+        <div class="field"><label>账号 / 手机号</label><input type="text" id="newUser" placeholder="如 13800138000" /></div>
         <div class="field"><label>姓名 / 备注</label><input type="text" id="newName" placeholder="客户名称" /></div>
         <div class="field"><label>授权天数</label><input type="number" id="newDays" value="30" min="1" max="3650" /></div>
         <div class="field"><label>初始密码（可空）</label><input type="text" id="newPass" placeholder="留空自动生成" /></div>
@@ -143,7 +143,7 @@ export function renderAdminPage() {
 
     <section class="card">
       <h2>账号列表</h2>
-      <p class="lead">停用后客户端最迟 30 分钟内被退回登录页；续期在原有到期时间上顺延。</p>
+      <p class="lead">客户可用「账号/手机号 + 密码」登录，也可用这里的「生成登录码」做一次性免密登录（10 分钟有效）。停用后客户端最迟 30 分钟内被退回登录页。</p>
       <div style="overflow-x:auto">
         <table>
           <thead>
@@ -255,7 +255,7 @@ export function renderAdminPage() {
         + '<td>' + days + '</td>'
         + '<td><span class="tag ' + st.cls + '">' + st.text + '</span></td>'
         + '<td><div class="ops">'
-        + '<button class="btn tiny" data-act="extend">续期 30 天</button>'
+        + '<button class="btn tiny" data-act="code">生成登录码</button>'
         + '<button class="btn tiny" data-act="reset">重置密码</button>'
         + '<button class="' + opCls + '" data-act="' + opAction + '">' + opName + '</button>'
         + '</div></td>'
@@ -280,7 +280,10 @@ export function renderAdminPage() {
     btn.disabled = true;
     hide($('listNotice'));
     try {
-      if (act === 'extend') {
+      if (act === 'code') {
+        var res = await api('/admin/accounts/' + id + '/login-code', { method: 'POST', body: {} });
+        showNotice($('listNotice'), '登录码：' + res.code + '（' + res.ttlMinutes + ' 分钟内有效，一次性，请发给客户）');
+      } else if (act === 'extend') {
         await api('/admin/accounts/' + id + '/extend', { method: 'POST', body: { days: 30 } });
         showNotice($('listNotice'), '已续期 30 天，客户端下次校验后生效。');
       } else if (act === 'disable') {
@@ -393,3 +396,4 @@ export function renderAdminPage() {
 </body>
 </html>`;
 }
+

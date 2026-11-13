@@ -89,6 +89,28 @@ export async function login(username, password) {
   }
 }
 
+// 一次性登录码登录（管理员在后台生成，10 分钟有效）
+export async function loginWithCode(username, code) {
+  auth.loggingIn = true;
+  auth.error = '';
+  auth.offline = false;
+  try {
+    const data = await requestJson(
+      '/api/auth/login-code',
+      { method: 'POST', body: JSON.stringify({ username, code }) },
+      20000,
+    );
+    if (!data?.ok || !data?.token) throw Object.assign(new Error('登录码无效'), { code: 'AUTH_CODE_DENIED' });
+    auth.token = data.token;
+    auth.account = data.account || null;
+    auth.lastCheckedAt = new Date().toISOString();
+    persist();
+    return data;
+  } finally {
+    auth.loggingIn = false;
+  }
+}
+
 export function logout(message = '') {
   clearState();
   auth.error = message;

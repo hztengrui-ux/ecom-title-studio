@@ -13,6 +13,8 @@ const SECRET_FILE = path.join(DATA_DIR, 'secret.key');
 const PORT = Number(process.env.AUTH_PORT) || 8090;
 const TOKEN_TTL_HOURS = Number(process.env.AUTH_TOKEN_TTL_HOURS) || 12;
 const DEFAULT_DAYS = Number(process.env.AUTH_DEFAULT_DAYS) || 30;
+// 一次性登录码有效期（分钟）
+const LOGIN_CODE_TTL_MINUTES = Number(process.env.AUTH_LOGIN_CODE_TTL_MINUTES) || 10;
 const ADMIN_TOKEN = String(process.env.AUTH_ADMIN_TOKEN || '').trim();
 
 let accountsCache = null;
@@ -73,6 +75,27 @@ function signToken(payload) {
   const body = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64url');
   const sig = crypto.createHmac('sha256', secret).update(body).digest('base64url');
   return `${body}.${sig}`;
+}
+
+// 签发客户登录令牌（账号密码 / 一次性登录码共用）
+function issueToken(account) {
+  const now = Math.floor(Date.now() / 1000);
+  const token = signToken({
+    sub: account.id,
+    user: account.username,
+    iat: now,
+    exp: now + TOKEN_TTL_HOURS * 3600,
+    jti: crypto.randomUUID(),
+  });
+  return {
+    token,
+    tokenExpiresAt: new Date((now + TOKEN_TTL_HOURS * 3600) * 1000).toISOString(),
+    account: publicAccount(account),
+  };
+}
+
+function newLoginCode() {
+  return String(crypto.randomInt(100000, 1000000));
 }
 
 function verifyToken(token) {
@@ -228,6 +251,28 @@ async function handleAdmin(req, res, pathname, query) {
     await writeAccounts(data);
     return json(res, 200, { ok: true, account: publicAccount(account) });
   }
+  const codeMatch = pathname.match(/^\/admin\/accounts\/([0-9a-fA-F-]{36})\/login-code$/);
+  if (req.method === 'POST' && codeMatch) {
+    const account = data.accounts.find((item) => item.id === codeMatch[1]);
+    if (!account) return json(res, 404, { ok: false, error: '账号不存在' });
+    const code = newLoginCode();
+    const { salt, hash } = hashPassword(code);
+    const expiresAt = new Date(Date.now() + LOGIN_CODE_TTL_MINUTES * 60000).toISOString();
+    const now = Date.now();
+    const kept = (Array.isArray(account.loginCodes) ? account.loginCodes : []).filter(
+      (entry) => !entry.usedAt && new Date(entry.expiresAt).getTime() > now,
+    );
+    kept.push({ salt, hash, expiresAt, createdAt: new Date().toISOString(), usedAt: null });
+    account.loginCodes = kept.slice(-5);
+    await writeAccounts(data);
+    return json(res, 200, {
+      ok: true,
+      code,
+      expiresAt,
+      ttlMinutes: LOGIN_CODE_TTL_MINUTES,
+      account: publicAccount(account),
+    });
+  }
   return json(res, 404, { ok: false, error: '未知的管理接口' });
 }
 
@@ -243,20 +288,42 @@ async function handleAuth(req, res, pathname) {
     }
     const block = accountBlockReason(account);
     if (block) return json(res, 403, { ok: false, error: block });
-    const now = Math.floor(Date.now() / 1000);
-    const token = signToken({
-      sub: account.id,
-      user: account.username,
-      iat: now,
-      exp: now + TOKEN_TTL_HOURS * 3600,
-      jti: crypto.randomUUID(),
-    });
-    return json(res, 200, {
-      ok: true,
-      token,
-      tokenExpiresAt: new Date((now + TOKEN_TTL_HOURS * 3600) * 1000).toISOString(),
-      account: publicAccount(account),
-    });
+    return json(res, 200, { ok: true, ...issueToken(account) });
+  }
+  if (req.method === 'POST' && pathname === '/auth/login-code') {
+    const ip = String(req.socket.remoteAddress || '');
+    if (rateLimited(ip)) return json(res, 429, { ok: false, error: '尝试过于频繁，请 1 分钟后再试' });
+    const body = await readBody(req);
+    const code = String(body.code || '').replace(/\s+/g, '');
+    const data = readAccounts(true);
+    const account = data.accounts.find(
+      (item) => String(item.username).toLowerCase() === String(body.username || '').trim().toLowerCase(),
+    );
+    if (!account || !/^\d{6}$/.test(code)) {
+      recordAttempt(ip);
+      return json(res, 401, { ok: false, error: '登录码不正确或已失效' });
+    }
+    const block = accountBlockReason(account);
+    if (block) return json(res, 403, { ok: false, error: block });
+    const now = Date.now();
+    const codes = Array.isArray(account.loginCodes) ? account.loginCodes : [];
+    const index = codes.findIndex(
+      (entry) =>
+        !entry.usedAt &&
+        new Date(entry.expiresAt).getTime() > now &&
+        checkPassword(code, entry),
+    );
+    if (index === -1) {
+      recordAttempt(ip);
+      return json(res, 401, { ok: false, error: '登录码不正确或已失效' });
+    }
+    codes[index].usedAt = new Date().toISOString();
+    // 只保留未使用且在有效期内的登录码
+    account.loginCodes = codes
+      .filter((entry) => !entry.usedAt && new Date(entry.expiresAt).getTime() > now)
+      .slice(-5);
+    await writeAccounts(data);
+    return json(res, 200, { ok: true, ...issueToken(account) });
   }
   if (req.method === 'GET' && pathname === '/auth/me') {
     const payload = verifyToken(bearer(req));

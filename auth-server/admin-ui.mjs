@@ -298,7 +298,7 @@ export function renderAdminPage() {
         + '<td><div class="ops">'
         + '<button class="btn tiny" data-act="edit">编辑</button>'
         + '<button class="btn tiny" data-act="code">生成登录码</button>'
-        + '<button class="btn tiny" data-act="reset">重置密码</button>'
+        + '<button class="btn tiny" data-act="reset">改密码</button>'
         + '<button class="' + opCls + '" data-act="' + opAction + '">' + opName + '</button>'
         + '</div></td>'
         + '</tr>';
@@ -350,7 +350,14 @@ export function renderAdminPage() {
         await api('/admin/accounts/' + id + '/enable', { method: 'POST', body: {} });
         showNotice($('listNotice'), '已启用该账号。');
       } else if (act === 'reset') {
-        var pwd = randomPassword();
+        var pwd = prompt('输入新密码（至少 6 位；留空则自动生成随机密码）：', '');
+        if (pwd === null) return;
+        pwd = String(pwd).trim();
+        if (pwd && pwd.length < 6) {
+          showNotice($('listNotice'), '密码至少 6 位，请重新操作', true);
+          return;
+        }
+        if (!pwd) pwd = randomPassword();
         await api('/admin/accounts/' + id + '/reset', { method: 'POST', body: { password: pwd } });
         showNotice($('listNotice'), '新密码：' + pwd + '（只显示这一次，请立刻复制发给客户）');
       }

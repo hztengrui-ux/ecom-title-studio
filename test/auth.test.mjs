@@ -284,3 +284,29 @@ test('管理员可修改账号（手机号）和密码，改后可用新账号�
     assert.equal(conflict.status, 409);
   });
 });
+
+test('管理员可删除账号，删除后立即无法登录', async () => {
+  await withServer(async (base) => {
+    const created = await admin(base, 'POST', '/admin/accounts', {
+      username: '13500135000',
+      password: 'delete123',
+      name: '待删除',
+      days: 30,
+    });
+    assert.equal(created.status, 200);
+    const id = created.data.account.id;
+
+    const deleted = await admin(base, 'POST', `/admin/accounts/${id}/delete`, {});
+    assert.equal(deleted.status, 200);
+
+    const login = await fetch(`${base}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: '13500135000', password: 'delete123' }),
+    });
+    assert.equal(login.status, 401);
+
+    const again = await admin(base, 'POST', `/admin/accounts/${id}/delete`, {});
+    assert.equal(again.status, 404);
+  });
+});

@@ -262,6 +262,21 @@ async function handleAdmin(req, res, pathname, query) {
     await writeAccounts(data);
     return json(res, 200, { ok: true, account: publicAccount(account) });
   }
+  const deleteMatch = pathname.match(/^\/admin\/accounts\/([0-9a-fA-F-]{36})\/delete$/);
+  if (req.method === 'POST' && deleteMatch) {
+    const index = data.accounts.findIndex((item) => item.id === deleteMatch[1]);
+    if (index === -1) return json(res, 404, { ok: false, error: '账号不存在' });
+    const target = data.accounts[index];
+    if (target.role === 'admin') {
+      const otherAdmins = data.accounts.filter((item) => item.role === 'admin' && item.id !== target.id);
+      if (!otherAdmins.length) {
+        return json(res, 400, { ok: false, error: '不能删除最后一个管理员账号' });
+      }
+    }
+    data.accounts.splice(index, 1);
+    await writeAccounts(data);
+    return json(res, 200, { ok: true });
+  }
   const updateMatch = pathname.match(/^\/admin\/accounts\/([0-9a-fA-F-]{36})\/update$/);
   if (req.method === 'POST' && updateMatch) {
     const account = data.accounts.find((item) => item.id === updateMatch[1]);

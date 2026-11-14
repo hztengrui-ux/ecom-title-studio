@@ -299,6 +299,7 @@ export function renderAdminPage() {
         + '<button class="btn tiny" data-act="edit">编辑</button>'
         + '<button class="btn tiny" data-act="code">生成登录码</button>'
         + '<button class="btn tiny" data-act="reset">改密码</button>'
+        + '<button class="btn tiny danger" data-act="delete">删除</button>'
         + '<button class="' + opCls + '" data-act="' + opAction + '">' + opName + '</button>'
         + '</div></td>'
         + '</tr>';
@@ -342,6 +343,11 @@ export function renderAdminPage() {
       } else if (act === 'extend') {
         await api('/admin/accounts/' + id + '/extend', { method: 'POST', body: { days: 30 } });
         showNotice($('listNotice'), '已续期 30 天，客户端下次校验后生效。');
+      } else if (act === 'delete') {
+        var targetName = row.querySelector('.user').textContent.trim();
+        if (!confirm('确定删除账号 ' + targetName + '？删除后该客户立刻无法登录，且无法恢复。')) return;
+        await api('/admin/accounts/' + id + '/delete', { method: 'POST', body: {} });
+        showNotice($('listNotice'), '已删除账号 ' + targetName);
       } else if (act === 'disable') {
         if (!confirm('停用后该客户约 1 分钟内会被退回登录页，确定停用？')) return;
         await api('/admin/accounts/' + id + '/disable', { method: 'POST', body: {} });

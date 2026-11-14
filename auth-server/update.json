@@ -1,6 +1,7 @@
 ﻿{
   "version": "2.2.3",
   "notes": "左下角常驻「更新」按钮，有新版本呼吸闪烁并弹窗；停用/到期约 1 分钟内下线；支持账号/手机号+密码或登录码登录。",
-  "url": "https://github.com/hztengrui-ux/ecom-title-studio/releases/download/v2.2.3/KuaduoTitleWorkshop-2.2.3-win-x64.zip",
-  "publishedAt": "2026-11-14T02:00:00.000Z"
+  "url": "https://github.com/hztengrui-ux/ecom-title-studio/releases/download/v2.2.3/KuaduoTitleWorkshop-2.2.3-win-x64-slim.zip",
+  "url7z": "https://github.com/hztengrui-ux/ecom-title-studio/releases/download/v2.2.3/KuaduoTitleWorkshop-2.2.3-win-x64.7z",
+  "publishedAt": "2026-11-14T05:17:00.000Z"
 }

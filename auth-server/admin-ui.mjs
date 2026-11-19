@@ -37,6 +37,17 @@ export function renderAdminPage() {
   .dot { width:7px; height:7px; border-radius:50%; background:var(--sage); }
   .dot.off { background:var(--amber); }
 
+  .dl { position:relative; }
+  .dl .caret { opacity:.55; font-size:10px; }
+  .dl-menu { position:absolute; right:0; top:calc(100% + 8px); min-width:300px; padding:6px;
+    background:#fffdf8; border:1px solid var(--line); border-radius:12px;
+    box-shadow:0 18px 40px rgba(63,50,32,.14); z-index:30; }
+  .dl-menu a { display:flex; justify-content:space-between; gap:14px; align-items:center;
+    padding:9px 10px; border-radius:8px; color:var(--ink); text-decoration:none; font-size:12.5px; }
+  .dl-menu a:hover { background:#f7f1e6; }
+  .dl-menu .meta { color:var(--muted-2); font-size:10.5px; white-space:nowrap; }
+  .dl-empty { display:block; padding:10px; font-size:12px; color:var(--muted); }
+
   .card { background:var(--paper-2); border:1px solid var(--line); border-radius:var(--radius);
     box-shadow:0 14px 36px rgba(63,50,32,.07); padding:22px; margin-bottom:18px; }
   .card h2 { margin:0 0 4px; font-family:var(--serif); font-size:17px; }
@@ -119,6 +130,10 @@ export function renderAdminPage() {
       <span>KUADUO OAUTH ADMIN</span>
     </div>
     <div class="top-right">
+      <div class="dl" id="dlWrap">
+        <button class="btn tiny" id="dlToggle" type="button">客户端下载 <span class="caret">▾</span></button>
+        <div class="dl-menu" id="dlMenu" hidden><span class="dl-empty">加载中…</span></div>
+      </div>
       <span class="pill"><i class="dot" id="svcDot"></i><span id="svcText">检查服务中…</span></span>
       <button class="btn tiny" id="logoutBtn" type="button" hidden>退出管理</button>
     </div>
@@ -533,6 +548,51 @@ export function renderAdminPage() {
     loadAccounts().catch(function (e) { showNotice($('listNotice'), e.message, true); });
   });
   $('logoutBtn').addEventListener('click', logout);
+
+  async function loadHeaderDownloads() {
+    var menu = $('dlMenu');
+    if (!menu) return;
+    try {
+      var resp = await fetch('/download/list');
+      var data = await resp.json();
+      var files = (data && data.files) || [];
+      if (!files.length) {
+        menu.innerHTML = '<span class="dl-empty">还没有安装包</span>';
+        return;
+      }
+      menu.innerHTML = files
+        .map(function (f) {
+          var mb = (f.size / 1048576).toFixed(1) + ' MB';
+          return (
+            '<a href="/download/' + encodeURIComponent(f.name) + '" target="_blank" rel="noopener">' +
+            '<span>' + esc(f.name) + '</span><span class="meta">' + mb + '</span></a>'
+          );
+        })
+        .join('');
+    } catch (e) {
+      menu.innerHTML = '<span class="dl-empty">加载失败，稍后重试</span>';
+    }
+  }
+
+  var dlToggle = $('dlToggle');
+  if (dlToggle) {
+    dlToggle.addEventListener('click', function (event) {
+      event.stopPropagation();
+      var menu = $('dlMenu');
+      menu.hidden = !menu.hidden;
+    });
+    document.addEventListener('click', function () {
+      var menu = $('dlMenu');
+      if (menu) menu.hidden = true;
+    });
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') {
+        var menu = $('dlMenu');
+        if (menu) menu.hidden = true;
+      }
+    });
+    loadHeaderDownloads();
+  }
 
   loadDownloads();
 

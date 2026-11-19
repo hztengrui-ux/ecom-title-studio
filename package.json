@@ -18,7 +18,8 @@
     "dist": "electron-builder --win",
     "dist:sign": "electron-builder --win",
     "sign:win": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sign-win.ps1",
-    "dist:folder": "electron-builder --win dir"
+    "dist:folder": "electron-builder --win dir",
+    "archive": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/archive-installers.ps1"
   },
   "engines": {
     "node": ">=20"

@@ -15,10 +15,10 @@
 
 ## Windows 桌面版
 
-当前为 **2.1.0（Vue 3 + Element Plus 重写版）**，提供两种免安装分发（也可直接在 [Releases](https://github.com/hztengrui-ux/ecom-title-studio/releases) 下载）：
+当前为 **2.2.4（Vue 3 + Element Plus 重写版）**，免安装分发（也可直接在 [Releases](https://github.com/hztengrui-ux/ecom-title-studio/releases) 下载）：
 
-- `KuaduoTitleWorkshop-2.1.0-win-x64.exe`：自解压单文件，双击选目录，解压后双击 `KuaduoTitleWorkshop.exe`。
-- `KuaduoTitleWorkshop-2.1.0-win-x64.zip`：完整解压后双击 `KuaduoTitleWorkshop.exe`。
+- `KuaduoTitleWorkshop-2.2.4-win-x64.zip`：完整解压后双击 `KuaduoTitleWorkshop.exe`（约 112 MB）。
+- 旧版本 2.2.3 另有精简包与 7z 包，仍可在 Releases 里下载。
 
 不需要安装，不需要管理员权限。不要只复制 exe，也不要在压缩包里直接运行。
 
@@ -31,7 +31,7 @@
 - 当前版本是便携版：整个文件夹可以放到任意目录，设置与历史保存在程序旁的 `KuaduoTitleWorkshop-data`，换电脑时连文件夹一起复制即可；目录不可写时会回退到 `%APPDATA%\KuaduoTitleWorkshop`。
 - 首次启动会自动迁移旧的 `TitleWorkshop-data` / `%APPDATA%\TitleWorkshop`，原设置和历史不用重新配。
 
-### 在线账号登录（2.1.0 起）
+### 在线账号登录（2.1.0 起，2.2.4 完善）
 
 桌面版启动时会先要求登录，账号由跨多多统一开通：
 

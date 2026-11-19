@@ -48,7 +48,7 @@ export function renderAdminPage() {
   .dl-menu .meta { color:var(--muted-2); font-size:10.5px; white-space:nowrap; }
   .dl-empty { display:block; padding:10px; font-size:12px; color:var(--muted); }
 
-  .dl-strip { max-width:520px; margin:0 auto 14px; padding:14px 16px;
+  .dl-strip { max-width:440px; margin:0 auto 14px; padding:14px 16px;
     border:1px solid var(--line); border-radius:14px; background:#fffdf8;
     box-shadow:0 10px 26px rgba(63,50,32,.05); }
   .dl-strip-head { display:flex; align-items:baseline; gap:10px; margin-bottom:8px; }
@@ -60,6 +60,7 @@ export function renderAdminPage() {
     overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .dl-strip-row a:hover { text-decoration:underline; }
   .dl-strip-row .meta { color:var(--muted-2); font-size:11px; white-space:nowrap; }
+  .dl-latest { font-size:9.5px; padding:1px 6px; border-radius:999px; background:var(--accent); color:#fff8ef; margin-right:6px; }
 
   .card { background:var(--paper-2); border:1px solid var(--line); border-radius:var(--radius);
     box-shadow:0 14px 36px rgba(63,50,32,.07); padding:22px; margin-bottom:18px; }
@@ -453,6 +454,12 @@ export function renderAdminPage() {
     }
   }
 
+  function prepareFiles(files) {
+    return (files || [])
+      .filter(function (f) { return /\.(zip|7z|exe)$/i.test(String(f.name || '')); })
+      .sort(function (a, b) { return new Date(b.mtime || 0) - new Date(a.mtime || 0); });
+  }
+
   async function loadDownloads() {
     var box = $('downloadList');
     var files = [];
@@ -460,7 +467,7 @@ export function renderAdminPage() {
     try {
       var resp = await fetch('/download/list');
       var data = await resp.json();
-      files = (data && data.files) || [];
+      files = prepareFiles((data && data.files) || []);
     } catch (e) {
       failed = true;
     }
@@ -498,11 +505,12 @@ export function renderAdminPage() {
       return;
     }
     strip.innerHTML = files
-      .map(function (f) {
+      .map(function (f, index) {
         var mb = (f.size / 1048576).toFixed(1) + ' MB';
+        var badge = index === 0 ? '<span class="dl-latest">最新</span>' : '';
         return (
           '<div class="dl-strip-row"><a href="/download/' + encodeURIComponent(f.name) + '">' +
-          esc(f.name) + '</a><span class="meta">' + mb + '</span></div>'
+          badge + esc(f.name) + '</a><span class="meta">' + mb + '</span></div>'
         );
       })
       .join('');
@@ -609,7 +617,7 @@ export function renderAdminPage() {
     try {
       var resp = await fetch('/download/list');
       var data = await resp.json();
-      var files = (data && data.files) || [];
+      var files = prepareFiles((data && data.files) || []);
       if (!files.length) {
         menu.innerHTML = '<span class="dl-empty">还没有安装包</span>';
         return;

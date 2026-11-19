@@ -1,8 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
+import fs from 'node:fs';
 import { once } from 'node:events';
 import { createHttpServer } from '../server.mjs';
+
+const pkg = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
 
 const TINY_PNG =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PzWvWQAAAABJRU5ErkJggg==';
@@ -569,7 +572,7 @@ test('更新检查：服务器有更高版本时提示更新，否则不提示',
   try {
     const newer = await (await fetch(`${base}/api/update/check`)).json();
     assert.equal(newer.ok, true);
-    assert.equal(newer.current, '2.2.0');
+    assert.equal(newer.current, pkg.version);
     assert.equal(newer.latest, '9.9.9');
     assert.equal(newer.hasUpdate, true);
     assert.match(newer.notes, /测试/);

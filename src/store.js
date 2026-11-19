@@ -286,6 +286,28 @@ export function setRules(next) {
   persistRules();
 }
 
+// 改了压缩边长/缩放方式后，已预处理的图片还按旧尺寸缓存着 dataUrl。
+// 不重置的话，用户把 1280 改成 768 再点「开始处理」，上传的仍是 1280 的图。
+watch(
+  () => `${state.rules.imageMaxEdge}:${state.rules.imageResizeMode}`,
+  (value, previous) => {
+    if (!previous || value === previous) return;
+    if (state.batch.running || state.batch.preprocess.running) return;
+    const affected = state.batch.items.filter(
+      (item) => item.file && item.preprocessState === 'done',
+    );
+    if (!affected.length) return;
+    for (const item of affected) {
+      item.preprocessState = 'pending';
+      item.dataUrl = '';
+      item.processedSize = 0;
+      item.processedWidth = 0;
+      item.processedHeight = 0;
+    }
+    toast('压缩尺寸已改，已重置预处理；下次「开始处理」会按新尺寸压缩', 'success');
+  },
+);
+
 export function isKeyOptional(baseUrl) {
   return /^(http:\/\/)?(127\.0\.0\.1|localhost)(:\d+)?/i.test(String(baseUrl || ''));
 }
@@ -367,7 +389,7 @@ export async function processImage(file, maxSide = 1280, resizeMode = 'width') {
   const bitmap = typeof createImageBitmap === 'function' ? await createImageBitmap(file) : await loadImage(URL.createObjectURL(file));
   const width = bitmap.width;
   const height = bitmap.height;
-  const limit = Math.min(4096, Math.max(320, Number(maxSide) || 1280));
+  const limit = Math.min(19800, Math.max(320, Number(maxSide) || 1280));
   const scale = resizeMode === 'width'
     ? Math.min(1, limit / width)
     : Math.min(1, limit / Math.max(width, height));

@@ -4025,17 +4025,49 @@ body.preview-open {
 }
 
 .batch-thumb {
+  position: relative;
   width: 46px;
   height: 46px;
   overflow: hidden;
   border-radius: 7px;
   background: var(--paper-3);
+  cursor: zoom-in;
 }
 
 .batch-thumb img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.batch-thumb-image,
+.batch-thumb-image .el-image__inner {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.batch-thumb-zoom {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  color: #fff;
+  background: rgba(20, 14, 8, 0.38);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+
+.batch-thumb:hover .batch-thumb-zoom {
+  opacity: 1;
+}
+
+.batch-thumb:hover img {
+  transform: scale(1.06);
+  transition: transform 0.2s ease;
 }
 
 .batch-card-main {

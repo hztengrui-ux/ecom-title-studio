@@ -94,8 +94,8 @@
         <div class="rule-pair">
           <label class="field">
             <span>目标尺寸</span>
-            <el-select v-model="draft.imageMaxEdge" size="small">
-              <el-option v-for="n in [548, 640, 768, 1024, 1280, 1600, 2048]" :key="n" :label="`${n} px`" :value="n" />
+            <el-select v-model="draft.imageMaxEdge" size="small" filterable allow-create default-first-option>
+              <el-option v-for="n in [548, 640, 768, 1024, 1280, 1600, 2048, 4096, 8192]" :key="n" :label="`${n} px`" :value="n" />
             </el-select>
           </label>
           <label class="field">

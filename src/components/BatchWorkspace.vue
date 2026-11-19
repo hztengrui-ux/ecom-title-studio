@@ -75,11 +75,11 @@
 
           <label class="field">
             <span>标题前缀 <em>固定保留，不截断</em></span>
-            <input v-model="state.rules.titlePrefix" placeholder="例如：女士秋冬新款简约百搭开衫毛衣" @input="persistRules" />
+            <input v-model="state.rules.titlePrefix" maxlength="60" placeholder="例如：女士秋冬新款简约百搭开衫毛衣" @input="persistRules" />
           </label>
           <label class="field">
             <span>标题后缀 <em>固定保留，不截断</em></span>
-            <input v-model="state.rules.titleSuffix" placeholder="例如：宽松休闲长袖针织上衣" @input="persistRules" />
+            <input v-model="state.rules.titleSuffix" maxlength="80" placeholder="例如：宽松休闲长袖针织上衣" @input="persistRules" />
           </label>
 
           <label class="field">
@@ -99,7 +99,7 @@
 
           <label class="field">
             <span>目标尺寸 <em>px · 可选可填</em></span>
-            <input v-model.number="state.rules.imageMaxEdge" type="number" min="320" max="4096" list="image-edges" @change="persistRules" />
+            <input v-model.number="state.rules.imageMaxEdge" type="number" min="320" max="19800" list="image-edges" @change="persistRules" />
             <datalist id="image-edges">
               <option v-for="n in [548, 640, 768, 1024, 1280, 1600, 2048]" :key="n" :value="n"></option>
             </datalist>
@@ -197,7 +197,20 @@
           :class="{ 'is-open': state.batch.expanded.has(item.id) }"
         >
           <div class="batch-card-header" @click="toggleExpanded(item.id)">
-            <div class="batch-thumb"><img :src="item.previewUrl || '/favicon.svg'" :alt="item.name" /></div>
+            <div class="batch-thumb" :title="item.previewUrl ? '点击放大' : ''" @click.stop>
+              <el-image
+                v-if="item.previewUrl"
+                :src="item.previewUrl"
+                :preview-src-list="[item.previewUrl]"
+                :initial-index="0"
+                preview-teleported
+                hide-on-click-modal
+                fit="cover"
+                class="batch-thumb-image"
+              />
+              <img v-else src="/favicon.svg" :alt="item.name" />
+              <span v-if="item.previewUrl" class="batch-thumb-zoom"><el-icon><ZoomIn /></el-icon></span>
+            </div>
             <div class="batch-card-main">
               <div class="batch-file">
                 <span class="batch-status" :data-status="item.status">{{ statusLabel(item.status) }}</span>

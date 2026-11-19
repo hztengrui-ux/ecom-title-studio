@@ -1,4 +1,4 @@
-﻿# 跨多多标题工坊 · 电商标题识图生成
+# 跨多多标题工坊 · 电商标题识图生成
 
 [![Release](https://img.shields.io/github/v/release/hztengrui-ux/ecom-title-studio?display_name=tag)](https://github.com/hztengrui-ux/ecom-title-studio/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/hztengrui-ux/ecom-title-studio/total)](https://github.com/hztengrui-ux/ecom-title-studio/releases)
@@ -132,7 +132,7 @@ npm run dist:folder # 打包 release/win-unpacked（不含安装器）
 - 默认全部勾选，取消勾选后「导出已选 Excel / CSV / 文件夹」只导出勾选内容；
 - 「预览文件夹」里的 HTML 预览也能直接勾选/取消标题，底部可 **导出已选 Excel** 或只保存勾选内容；
 - **图片不限张数**，实际速度取决于模型限流、网络与本机内存；
-- **启动前会先做图片压缩预处理**：可按键宽或最长边等比压缩到 548 / 768 / 1024 / 1280 / 1600 / 2048，或自己填 320–4096 的任意数字；
+- **启动前会先做图片压缩预处理**：可按键宽或最长边等比压缩到 548 / 768 / 1024 / 1280 / 1600 / 2048，或自己填 320–19800 的任意数字；
 - 点「开始处理」后严格按 **① 预处理 → ② 识别** 执行，不会先识别再压缩；
 - 可手动点「预处理」提前看压缩前后体积；
 - 每张图会显示「已压缩 548×... · 320 KB」；
@@ -175,7 +175,7 @@ npm run dist:folder # 打包 release/win-unpacked（不含安装器）
 | 标题前缀 / 后缀 | 例如 `圣诞款`、`现货`；系统统一拼接并完整保留，模型不会重复添加；超长时只压缩中间标题 |
 | 并发数 | 默认「自动」按 CPU/内存推荐 2–10；也可手动 1–20，越高越容易限流 |
 | 缩放方式 | 按宽度等比 / 按最长边 |
-| 目标尺寸 | 548 / 640 / 768 / 1024 / 1280 / 1600 / 2048，或手填 320–4096 |
+| 目标尺寸 | 548 / 640 / 768 / 1024 / 1280 / 1600 / 2048，或手填 320–19800 |
 | 目标长度 | 0 = 平台默认；填 180 也只会在平台硬上限内生效（TEMU 仍 ≤120） |
 | 标题语言 | 跟随平台 / 中文 / English；强行指定中文时 TEMU 会变中文，需自行判断是否合适 |
 | 禁用关键词 | 每行一个，标题和描述都会检测 |

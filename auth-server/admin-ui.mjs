@@ -48,12 +48,25 @@ export function renderAdminPage() {
   .dl-menu .meta { color:var(--muted-2); font-size:10.5px; white-space:nowrap; }
   .dl-empty { display:block; padding:10px; font-size:12px; color:var(--muted); }
 
+  .dl-strip { max-width:520px; margin:0 auto 14px; padding:14px 16px;
+    border:1px solid var(--line); border-radius:14px; background:#fffdf8;
+    box-shadow:0 10px 26px rgba(63,50,32,.05); }
+  .dl-strip-head { display:flex; align-items:baseline; gap:10px; margin-bottom:8px; }
+  .dl-strip-head strong { font-family:var(--serif); font-size:14px; }
+  .dl-strip-head span { font-size:11px; color:var(--muted-2); }
+  .dl-strip-list { display:flex; flex-direction:column; gap:6px; }
+  .dl-strip-row { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .dl-strip-row a { font-size:12.5px; color:var(--ink); text-decoration:none;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .dl-strip-row a:hover { text-decoration:underline; }
+  .dl-strip-row .meta { color:var(--muted-2); font-size:11px; white-space:nowrap; }
+
   .card { background:var(--paper-2); border:1px solid var(--line); border-radius:var(--radius);
     box-shadow:0 14px 36px rgba(63,50,32,.07); padding:22px; margin-bottom:18px; }
   .card h2 { margin:0 0 4px; font-family:var(--serif); font-size:17px; }
   .card .lead { margin:0 0 16px; font-size:12.5px; color:var(--muted); }
 
-  .login-card { max-width:440px; margin:8vh auto 0; }
+  .login-card { max-width:440px; margin:22px auto 0; }
   .tabs { display:flex; gap:6px; margin:0 0 16px; padding:4px; border:1px solid var(--line); border-radius:11px; background:#f7f1e6; }
   .tab { flex:1; height:32px; border:0; border-radius:8px; background:transparent; color:var(--muted); font-size:13px; cursor:pointer; font-family:var(--sans); }
   .tab.is-active { background:#fffdf8; color:var(--ink); box-shadow:0 1px 3px rgba(63,50,32,.12); }
@@ -130,7 +143,7 @@ export function renderAdminPage() {
       <span>KUADUO OAUTH ADMIN</span>
     </div>
     <div class="top-right">
-      <div class="dl" id="dlWrap">
+      <div class="dl" id="dlWrap" hidden>
         <button class="btn tiny" id="dlToggle" type="button">客户端下载 <span class="caret">▾</span></button>
         <div class="dl-menu" id="dlMenu" hidden><span class="dl-empty">加载中…</span></div>
       </div>
@@ -138,6 +151,14 @@ export function renderAdminPage() {
       <button class="btn tiny" id="logoutBtn" type="button" hidden>退出管理</button>
     </div>
   </header>
+
+  <section class="dl-strip" id="loginDl">
+    <div class="dl-strip-head">
+      <strong>客户端下载</strong>
+      <span>无需登录，直接下载安装包</span>
+    </div>
+    <div class="dl-strip-list" id="loginDlList"><span class="sub">加载中…</span></div>
+  </section>
 
   <section class="card login-card" id="loginCard">
     <h2>管理员登录</h2>
@@ -434,32 +455,63 @@ export function renderAdminPage() {
 
   async function loadDownloads() {
     var box = $('downloadList');
-    if (!box) return;
+    var files = [];
+    var failed = false;
     try {
       var resp = await fetch('/download/list');
       var data = await resp.json();
-      var files = (data && data.files) || [];
-      if (!files.length) {
-        box.innerHTML = '<span class="sub">还没有安装包。把安装包放到服务器 /opt/kuaduo-auth/download/ 后刷新即可。</span>';
-        return;
-      }
-      box.innerHTML = files
-        .map(function (f) {
-          var mb = (f.size / 1048576).toFixed(1) + ' MB';
-          return (
-            '<div class="download-row"><div><strong>' + esc(f.name) + '</strong>' +
-            '<span class="sub">' + mb + ' · ' + fmtDate(f.mtime) + '</span></div>' +
-            '<a class="btn tiny" href="/download/' + encodeURIComponent(f.name) + '" target="_blank" rel="noopener">下载</a></div>'
-          );
-        })
-        .join('');
+      files = (data && data.files) || [];
     } catch (e) {
-      box.innerHTML = '<span class="sub">下载列表加载失败，稍后刷新重试</span>';
+      failed = true;
     }
+    renderLoginDownloads(files, failed);
+    if (!box) return;
+    if (failed) {
+      box.innerHTML = '<span class="sub">下载列表加载失败，稍后刷新重试</span>';
+      return;
+    }
+    if (!files.length) {
+      box.innerHTML = '<span class="sub">还没有安装包。把安装包放到服务器 /opt/kuaduo-auth/download/ 后刷新即可。</span>';
+      return;
+    }
+    box.innerHTML = files
+      .map(function (f) {
+        var mb = (f.size / 1048576).toFixed(1) + ' MB';
+        return (
+          '<div class="download-row"><div><strong>' + esc(f.name) + '</strong>' +
+          '<span class="sub">' + mb + ' · ' + fmtDate(f.mtime) + '</span></div>' +
+          '<a class="btn tiny" href="/download/' + encodeURIComponent(f.name) + '" target="_blank" rel="noopener">下载</a></div>'
+        );
+      })
+      .join('');
+  }
+
+  function renderLoginDownloads(files, failed) {
+    var strip = $('loginDlList');
+    if (!strip) return;
+    if (failed) {
+      strip.innerHTML = '<span class="sub">下载列表加载失败，稍后刷新重试</span>';
+      return;
+    }
+    if (!files.length) {
+      strip.innerHTML = '<span class="sub">还没有安装包</span>';
+      return;
+    }
+    strip.innerHTML = files
+      .map(function (f) {
+        var mb = (f.size / 1048576).toFixed(1) + ' MB';
+        return (
+          '<div class="dl-strip-row"><a href="/download/' + encodeURIComponent(f.name) + '">' +
+          esc(f.name) + '</a><span class="meta">' + mb + '</span></div>'
+        );
+      })
+      .join('');
   }
 
   function showPanel() {
     loginCard.classList.add('hidden');
+    if ($('loginDl')) $('loginDl').classList.add('hidden');
+    if ($('dlWrap')) $('dlWrap').hidden = false;
     panel.classList.remove('hidden');
     $('logoutBtn').hidden = false;
   }
@@ -481,6 +533,8 @@ export function renderAdminPage() {
     localStorage.removeItem(TOKEN_KEY);
     panel.classList.add('hidden');
     loginCard.classList.remove('hidden');
+    if ($('loginDl')) $('loginDl').classList.remove('hidden');
+    if ($('dlWrap')) $('dlWrap').hidden = true;
     $('logoutBtn').hidden = true;
     $('tokenInput').value = '';
     $('adminPass').value = '';

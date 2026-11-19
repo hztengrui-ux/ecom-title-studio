@@ -187,7 +187,7 @@ export function renderAdminPage() {
         <table>
           <thead>
             <tr>
-              <th>账号</th><th>到期时间</th><th>剩余</th><th>状态</th><th style="width:330px">操作</th>
+              <th>账号</th><th>到期时间</th><th>剩余</th><th>状态</th><th style="width:400px">操作</th>
             </tr>
           </thead>
           <tbody id="tbody"></tbody>
@@ -297,6 +297,7 @@ export function renderAdminPage() {
         + '<td><span class="tag ' + st.cls + '">' + st.text + '</span></td>'
         + '<td><div class="ops">'
         + '<button class="btn tiny" data-act="edit">编辑</button>'
+        + '<button class="btn tiny" data-act="extend">续期</button>'
         + '<button class="btn tiny" data-act="code">生成登录码</button>'
         + '<button class="btn tiny" data-act="reset">改密码</button>'
         + '<button class="btn tiny danger" data-act="delete">删除</button>'
@@ -341,8 +342,13 @@ export function renderAdminPage() {
         var res = await api('/admin/accounts/' + id + '/login-code', { method: 'POST', body: {} });
         showNotice($('listNotice'), '登录码：' + res.code + '（' + res.ttlMinutes + ' 分钟内有效，一次性，请发给客户）');
       } else if (act === 'extend') {
-        await api('/admin/accounts/' + id + '/extend', { method: 'POST', body: { days: 30 } });
-        showNotice($('listNotice'), '已续期 30 天，客户端下次校验后生效。');
+        var input = prompt('续期天数（默认 30，1–3650）：', '30');
+        if (input === null) return;
+        var days = Math.round(Number(input));
+        if (!Number.isFinite(days) || days < 1) days = 30;
+        days = Math.min(3650, days);
+        await api('/admin/accounts/' + id + '/extend', { method: 'POST', body: { days: days } });
+        showNotice($('listNotice'), '已续期 ' + days + ' 天，客户端下次校验（约 1 分钟内）生效。');
       } else if (act === 'delete') {
         var targetName = row.querySelector('.user').textContent.trim();
         if (!confirm('确定删除账号 ' + targetName + '？删除后该客户立刻无法登录，且无法恢复。')) return;

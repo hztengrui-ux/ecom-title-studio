@@ -16,7 +16,7 @@ Get-ChildItem $release -File -ErrorAction SilentlyContinue |
   }
 
 $lines = Get-ChildItem $Archive -File |
-  Where-Object { $_.Name -ne 'SHA256SUMS.txt' } |
+  Where-Object { $_.Name -ne 'SHA256SUMS.txt' -and $_.Name -ne 'README.md' } |
   Sort-Object Name |
   ForEach-Object {
     $hash = (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower()

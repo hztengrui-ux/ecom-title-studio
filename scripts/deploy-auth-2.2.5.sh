@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 跨多多标题工坊 · 2.2.5 服务端一键同步
 # 在服务器上用 root 执行：
-#   curl -fsSL https://cdn.jsdelivr.net/gh/hztengrui-ux/ecom-title-studio@__COMMIT__/scripts/deploy-auth-2.2.5.sh -o /tmp/deploy.sh
+#   curl -fsSL https://cdn.jsdelivr.net/gh/hztengrui-ux/ecom-title-studio@82d39f7/scripts/deploy-auth-2.2.5.sh -o /tmp/deploy.sh
 #   sudo bash /tmp/deploy.sh
 set -euo pipefail
 
@@ -9,8 +9,8 @@ APP_DIR="/opt/kuaduo-auth"
 PKG="KuaduoTitleWorkshop-2.2.5-win-x64.zip"
 PKG_URL="https://github.com/hztengrui-ux/ecom-title-studio/releases/download/v2.2.5/${PKG}"
 BASES=(
-  "https://cdn.jsdelivr.net/gh/hztengrui-ux/ecom-title-studio@__COMMIT__"
-  "https://raw.githubusercontent.com/hztengrui-ux/ecom-title-studio/__COMMIT__"
+  "https://cdn.jsdelivr.net/gh/hztengrui-ux/ecom-title-studio@82d39f7"
+  "https://raw.githubusercontent.com/hztengrui-ux/ecom-title-studio/82d39f7"
 )
 
 fetch_small() {

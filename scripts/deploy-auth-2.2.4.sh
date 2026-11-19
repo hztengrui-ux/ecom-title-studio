@@ -9,8 +9,8 @@ APP_DIR="/opt/kuaduo-auth"
 PKG="KuaduoTitleWorkshop-2.2.4-win-x64.zip"
 PKG_URL="https://github.com/hztengrui-ux/ecom-title-studio/releases/download/v2.2.4/${PKG}"
 BASES=(
-  "https://raw.githubusercontent.com/hztengrui-ux/ecom-title-studio/main"
-  "https://cdn.jsdelivr.net/gh/hztengrui-ux/ecom-title-studio@main"
+  "https://cdn.jsdelivr.net/gh/hztengrui-ux/ecom-title-studio@8a7bb55"
+  "https://raw.githubusercontent.com/hztengrui-ux/ecom-title-studio/8a7bb55"
 )
 
 fetch_small() {

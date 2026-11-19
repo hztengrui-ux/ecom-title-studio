@@ -12,6 +12,8 @@ const ACCOUNTS_FILE = path.join(DATA_DIR, 'accounts.json');
 const SECRET_FILE = path.join(DATA_DIR, 'secret.key');
 const UPDATE_FILE = process.env.AUTH_UPDATE_FILE || path.join(__dirname, 'update.json');
 const DOWNLOAD_DIR = process.env.AUTH_DOWNLOAD_DIR || path.join(__dirname, 'download');
+const USAGE_FILE = process.env.AUTH_USAGE_FILE || path.join(DATA_DIR, 'usage.json');
+const USAGE_MAX_EVENTS = Number(process.env.AUTH_USAGE_MAX) || 20000;
 const PORT = Number(process.env.AUTH_PORT) || 8090;
 const TOKEN_TTL_HOURS = Number(process.env.AUTH_TOKEN_TTL_HOURS) || 12;
 const DEFAULT_DAYS = Number(process.env.AUTH_DEFAULT_DAYS) || 30;
@@ -57,6 +59,63 @@ async function writeAccounts(data) {
   await fsp.rename(tmp, ACCOUNTS_FILE);
   accountsCache = data;
   try { accountsMtime = fs.statSync(ACCOUNTS_FILE).mtimeMs; } catch { accountsMtime = 0; }
+}
+
+// ---- 调用记录 ----
+let usageCache = null;
+
+function readUsage() {
+  if (usageCache) return usageCache;
+  let data = { events: [] };
+  try {
+    data = JSON.parse(fs.readFileSync(USAGE_FILE, 'utf8'));
+  } catch {
+    data = { events: [] };
+  }
+  if (!Array.isArray(data.events)) data.events = [];
+  usageCache = data;
+  return data;
+}
+
+async function writeUsage(data) {
+  ensureDir();
+  const tmp = `${USAGE_FILE}.tmp`;
+  await fsp.writeFile(tmp, JSON.stringify(data) + '\n', 'utf8');
+  await fsp.rename(tmp, USAGE_FILE);
+  usageCache = data;
+}
+
+function clip(value, limit) {
+  return String(value ?? '').replace(/\s+/g, ' ').trim().slice(0, limit);
+}
+
+function normalizeUsageEvent(account, body) {
+  const titles = (Array.isArray(body.titles) ? body.titles : [])
+    .slice(0, 12)
+    .map((item) => ({
+      platform: clip(item?.platform, 20),
+      label: clip(item?.label, 24),
+      text: clip(item?.text, 600),
+      translation: clip(item?.translation, 600),
+    }))
+    .filter((item) => item.text);
+  if (!titles.length) return null;
+  return {
+    id: crypto.randomUUID(),
+    accountId: account.id,
+    username: account.username,
+    name: account.name || '',
+    at: new Date().toISOString(),
+    source: body.source === 'batch' ? 'batch' : 'single',
+    sku: clip(body.sku, 120),
+    model: clip(body.model, 80),
+    platforms: (Array.isArray(body.platforms) ? body.platforms : [])
+      .slice(0, 6)
+      .map((value) => clip(value, 20))
+      .filter(Boolean),
+    elapsedMs: Math.max(0, Math.min(3600000, Number(body.elapsedMs) || 0)),
+    titles,
+  };
 }
 
 function hashPassword(password, salt = crypto.randomBytes(16).toString('hex')) {
@@ -212,6 +271,36 @@ function adminRoute(pathname) {
 async function handleAdmin(req, res, pathname, query) {
   if (!adminOk(req)) return json(res, 401, { ok: false, error: '管理员令牌无效' });
   const data = readAccounts(true);
+
+  if (req.method === 'GET' && pathname === '/admin/usage/summary') {
+    const usage = readUsage();
+    const today = new Date().toISOString().slice(0, 10);
+    const accounts = data.accounts.map((account) => {
+      const list = usage.events.filter((event) => event.accountId === account.id);
+      return {
+        id: account.id,
+        username: account.username,
+        name: account.name || '',
+        total: list.length,
+        today: list.filter((event) => String(event.at).slice(0, 10) === today).length,
+        titles: list.reduce((sum, event) => sum + (Array.isArray(event.titles) ? event.titles.length : 0), 0),
+        lastAt: list.length ? list[list.length - 1].at : '',
+      };
+    });
+    return json(res, 200, { ok: true, accounts, totalEvents: usage.events.length });
+  }
+
+  if (req.method === 'GET' && pathname === '/admin/usage/records') {
+    const accountId = String(query.get('accountId') || '');
+    const limit = Math.min(500, Math.max(1, Number(query.get('limit')) || 100));
+    const usage = readUsage();
+    const records = usage.events
+      .filter((event) => !accountId || event.accountId === accountId)
+      .slice(-limit)
+      .reverse();
+    return json(res, 200, { ok: true, records });
+  }
+
   if (req.method === 'GET' && pathname === '/admin/accounts') {
     return json(res, 200, { ok: true, accounts: data.accounts.map(publicAccount) });
   }
@@ -385,7 +474,25 @@ async function handleAuth(req, res, pathname) {
     if (block) return json(res, 403, { ok: false, error: block });
     return json(res, 200, { ok: true, account: publicAccount(account) });
   }
-if (req.method === 'GET' && pathname === '/update/latest') {
+  if (req.method === 'POST' && pathname === '/usage/report') {
+    const tokenPayload = verifyToken(bearer(req));
+    if (!tokenPayload) return json(res, 401, { ok: false, error: '登录已失效，请重新登录' });
+    const account = readAccounts(true).accounts.find((item) => item.id === tokenPayload.sub);
+    const block = accountBlockReason(account);
+    if (block) return json(res, 403, { ok: false, error: block });
+    const body = await readBody(req, 64 * 1024);
+    const event = normalizeUsageEvent(account, body);
+    if (!event) return json(res, 400, { ok: false, error: '没有可记录的标题内容' });
+    const usage = readUsage();
+    usage.events.push(event);
+    if (usage.events.length > USAGE_MAX_EVENTS) {
+      usage.events.splice(0, usage.events.length - USAGE_MAX_EVENTS);
+    }
+    await writeUsage(usage);
+    const total = usage.events.filter((item) => item.accountId === account.id).length;
+    return json(res, 200, { ok: true, id: event.id, total });
+  }
+  if (req.method === 'GET' && pathname === '/update/latest') {
     let payload = { ok: true, version: '', notes: '', url: '', publishedAt: '' };
     try {
       payload = { ...payload, ...JSON.parse(fs.readFileSync(UPDATE_FILE, 'utf8')) };

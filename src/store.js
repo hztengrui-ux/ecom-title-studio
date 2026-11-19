@@ -2,7 +2,8 @@ import { computed, reactive, watch } from 'vue';
 import { ElMessage } from 'element-plus';
 import { DEFAULT_RULES, migrateRules, normalizeRules } from '../lib/rules.mjs';
 import { PLATFORMS, STRATEGIES } from '../lib/platforms.mjs';
-import { getJson, postJson, blobToBase64, downloadBlob } from './api.js';
+import { getJson, postJson, requestJson, blobToBase64, downloadBlob } from './api.js';
+import { auth } from './auth.js';
 
 export const STORAGE = {
   settings: 'tw.settings.v1',
@@ -494,8 +495,37 @@ export function clearSingleImage() {
   state.single.error = null;
 }
 
-export async function generateSingle() {
-  if (state.single.busy) return;
+// 把每次生成的标题（不含图片）上报到账号服务，供后台「调用记录」统计
+async function reportUsage(result, { source, sku = '', elapsedMs = 0, model = '' }) {
+  try {
+    if (!auth.token) return;
+    const titles = (result?.titles || [])
+      .map((title) => ({
+        platform: title.platform,
+        label: title.strategyLabel,
+        text: title.text,
+        translation: title.translation,
+      }))
+      .filter((title) => title.text);
+    if (!titles.length) return;
+    await requestJson('/api/usage/report', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${auth.token}` },
+      body: JSON.stringify({
+        source,
+        sku,
+        model,
+        elapsedMs,
+        platforms: state.selectedPlatforms,
+        titles,
+      }),
+    }, 8000);
+  } catch {
+    // 记录失败不影响生成结果
+  }
+}
+
+export async function generateSingle() {  if (state.single.busy) return;
   if (!state.single.image) {
     toast('先上传一张商品图，或选一个示例');
     return;
@@ -557,6 +587,13 @@ export async function generateSingle() {
     state.single.activePlatform =
       state.selectedPlatforms.find((id) => (counts[id] || 0) > 0) || state.selectedPlatforms[0];
     addHistory(result);
+    if (state.settings.provider !== 'demo') {
+      reportUsage(result, {
+        source: 'single',
+        elapsedMs: Date.now() - startedAt,
+        model: state.settings.model,
+      });
+    }
   } catch (error) {
     state.single.error = {
       title: error?.code === 'CONFIG_REQUIRED' ? '模型还没有配置好' : '生成没有完成',
@@ -825,6 +862,14 @@ async function processBatchItem(item) {
     item.status = 'done';
     item.finishedAt = Date.now();
     state.batch.latestId = item.id;
+    if (state.settings.provider !== 'demo') {
+      reportUsage(result, {
+        source: 'batch',
+        sku: item.sku || item.name,
+        elapsedMs: Date.now() - itemStartedAt,
+        model: state.settings.model,
+      });
+    }
   } catch (error) {
     item.status = 'error';
     item.error = error?.message || '处理失败';

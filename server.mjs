@@ -559,6 +559,36 @@ if (pathname === '/api/update/check' && req.method === 'GET') {
       return;
     }
 
+    if (pathname === '/api/usage/report' && req.method === 'POST') {
+      try {
+        const header = String(req.headers.authorization || '');
+        const token = header.replace(/^Bearer\s+/i, '').trim();
+        if (!token) {
+          sendJson(res, 200, { ok: false, error: { code: 'AUTH_TOKEN_MISSING', message: '请先登录' } });
+          return;
+        }
+        const body = await readJsonBody(req);
+        const result = await forwardAuth(authBase, '/usage/report', {
+          method: 'POST',
+          body,
+          token,
+        });
+        if (result.status === 200 && result.payload?.ok) {
+          sendJson(res, 200, result.payload);
+          return;
+        }
+        // 记录失败不打断生成流程，前端静默忽略
+        sendJson(res, 200, {
+          ok: false,
+          error: { code: 'USAGE_REPORT_FAILED', message: result.payload?.error || '记录失败' },
+        });
+      } catch (error) {
+        console.error('[usage/report]', error?.message || error);
+        sendJson(res, 200, { ok: false, error: { code: 'USAGE_REPORT_FAILED', message: '记录失败' } });
+      }
+      return;
+    }
+
     if (pathname.startsWith('/api/')) {
       sendError(res, 404, 'API_NOT_FOUND', '接口不存在');
       return;

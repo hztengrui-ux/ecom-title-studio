@@ -1,6 +1,6 @@
 {
-  "version": "2.2.4",
-  "notes": "修复标题前缀/后缀被截断（24 → 60/80 字符）；目标尺寸放宽到 320–19800；批量缩略图支持点击放大；修改压缩尺寸后自动重置预处理；修复更新检查测试的版本硬编码。",
-  "url": "https://github.com/hztengrui-ux/ecom-title-studio/releases/download/v2.2.4/KuaduoTitleWorkshop-2.2.4-win-x64.zip",
-  "publishedAt": "2026-11-19T06:31:44.000Z"
+  "version": "2.2.5",
+  "notes": "后台新增「调用记录」：按账号统计模型调用次数、平台、模型与标题内容（不含图片），客户端生成后自动上报；包含标题前缀/后缀放宽、目标尺寸 320–19800、缩略图放大、改尺寸重置预处理。",
+  "url": "https://github.com/hztengrui-ux/ecom-title-studio/releases/download/v2.2.5/KuaduoTitleWorkshop-2.2.5-win-x64.zip",
+  "publishedAt": "2026-11-19T09:10:00.000Z"
 }

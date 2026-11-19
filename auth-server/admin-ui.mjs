@@ -62,6 +62,26 @@ export function renderAdminPage() {
   .dl-strip-row .meta { color:var(--muted-2); font-size:11px; white-space:nowrap; }
   .dl-latest { font-size:9.5px; padding:1px 6px; border-radius:999px; background:var(--accent); color:#fff8ef; margin-right:6px; }
 
+  .card-head { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .usage-summary { margin-top:6px; }
+  .usage-row { display:flex; align-items:center; gap:14px; padding:9px 4px;
+    border-bottom:1px solid var(--line); font-size:12.5px; }
+  .usage-row:last-child { border-bottom:0; }
+  .usage-row .who { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .usage-row .num { width:64px; color:var(--muted-2); font-size:12px; }
+  .usage-row .num b { color:var(--ink); font-size:14px; font-weight:600; }
+  .usage-row .when { width:150px; color:var(--muted-2); font-size:11.5px; }
+  .usage-detail { margin-top:14px; border-top:1px dashed var(--line); padding-top:12px; }
+  .usage-detail-head { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+  .usage-day-title { font-size:11px; letter-spacing:.1em; color:var(--muted-2); margin:10px 0 4px; }
+  .usage-ev { display:flex; gap:10px; padding:8px 4px; border-bottom:1px dashed rgba(63,50,32,.10); }
+  .usage-ev .t { width:58px; flex:none; color:var(--muted-2); font-size:11.5px; }
+  .usage-ev .tt { flex:1; min-width:0; }
+  .usage-ev .tt b { font-weight:600; }
+  .usage-ev .tr { color:var(--muted); font-size:11.5px; margin-top:2px; }
+  .usage-ev .meta2 { color:var(--muted-2); font-size:10.5px; margin-top:3px; }
+  .usage-ev .src { font-size:9.5px; padding:1px 6px; border-radius:999px; background:#f2ece1; color:var(--muted); margin-right:6px; }
+
   .card { background:var(--paper-2); border:1px solid var(--line); border-radius:var(--radius);
     box-shadow:0 14px 36px rgba(63,50,32,.07); padding:22px; margin-bottom:18px; }
   .card h2 { margin:0 0 4px; font-family:var(--serif); font-size:17px; }
@@ -215,6 +235,16 @@ export function renderAdminPage() {
       <p class="lead">最新安装包放在服务器上，客户可直接下载；把链接发给客户即可。</p>
       <div id="downloadList" class="download-list"><span class="sub">加载中…</span></div>
       <p class="notice hidden" id="downloadNotice"></p>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>调用记录</h2>
+        <button class="btn tiny" id="usageRefresh" type="button">刷新</button>
+      </div>
+      <p class="lead">客户端每次生成标题都会记一条：调用次数、平台、模型与标题内容（不含图片）。点「查看记录」按账号看明细。</p>
+      <div id="usageSummary" class="usage-summary"><span class="sub">加载中…</span></div>
+      <div id="usageDetail" class="usage-detail hidden"></div>
     </section>
 
     <section class="card">
@@ -516,12 +546,117 @@ export function renderAdminPage() {
       .join('');
   }
 
+  var PLATFORM_LABELS = {
+    taobao: '淘宝', pdd: '拼多多', douyin: '抖店', jd: '京东', temu: 'TEMU', amazon: 'Amazon',
+  };
+  function platformLabel(id) {
+    return PLATFORM_LABELS[id] || id || '';
+  }
+
+  async function loadUsage() {
+    var box = $('usageSummary');
+    if (!box) return;
+    box.innerHTML = '<span class="sub">加载中…</span>';
+    try {
+      var data = await api('/admin/usage/summary');
+      var rows = data.accounts || [];
+      if (!rows.length) {
+        box.innerHTML = '<span class="sub">还没有账号</span>';
+        return;
+      }
+      box.innerHTML = rows
+        .map(function (a) {
+          return (
+            '<div class="usage-row">' +
+            '<div class="who"><strong>' + esc(a.username) + '</strong>' +
+            (a.name ? ' <span class="sub">' + esc(a.name) + '</span>' : '') + '</div>' +
+            '<div class="num"><b>' + (a.total || 0) + '</b> 次</div>' +
+            '<div class="num">今日 ' + (a.today || 0) + '</div>' +
+            '<div class="when">' + (a.lastAt ? fmtDate(a.lastAt) : '—') + '</div>' +
+            '<button class="btn tiny" data-usage="' + esc(a.id) + '" type="button">查看记录</button>' +
+            '</div>'
+          );
+        })
+        .join('');
+      box.onclick = onUsageClick;
+    } catch (e) {
+      box.innerHTML = '<span class="sub">调用记录加载失败，稍后刷新重试</span>';
+    }
+  }
+
+  async function onUsageClick(event) {
+    var btn = event.target.closest('button[data-usage]');
+    if (!btn) return;
+    var id = btn.getAttribute('data-usage');
+    var detail = $('usageDetail');
+    detail.classList.remove('hidden');
+    detail.innerHTML = '<span class="sub">加载中…</span>';
+    try {
+      var data = await api('/admin/usage/records?accountId=' + encodeURIComponent(id) + '&limit=200');
+      renderUsageDetail(data.records || []);
+    } catch (e) {
+      detail.innerHTML = '<span class="sub">记录加载失败</span>';
+    }
+  }
+
+  function renderUsageDetail(records) {
+    var detail = $('usageDetail');
+    if (!records.length) {
+      detail.innerHTML =
+        '<div class="usage-detail-head"><strong>调用明细</strong><span class="sub">暂无记录</span>' +
+        '<button class="btn tiny" type="button" id="usageClose">收起</button></div>';
+      wireUsageClose();
+      return;
+    }
+    var groups = {};
+    records.forEach(function (r) {
+      var day = String(r.at || '').slice(0, 10);
+      (groups[day] = groups[day] || []).push(r);
+    });
+    var html =
+      '<div class="usage-detail-head"><strong>' + esc(records[0].username || '') + '</strong>' +
+      '<span class="sub">最近 ' + records.length + ' 条</span>' +
+      '<button class="btn tiny" type="button" id="usageClose">收起</button></div>';
+    Object.keys(groups).forEach(function (day) {
+      html += '<div class="usage-day-title">' + esc(day) + '</div>';
+      groups[day].forEach(function (r) {
+        var time = String(r.at || '').slice(11, 19);
+        var titles = (r.titles || [])
+          .map(function (t) {
+            return (
+              '<div><b>[' + esc(platformLabel(t.platform)) + ']</b> ' + esc(t.text) + '</div>' +
+              (t.translation ? '<div class="tr">' + esc(t.translation) + '</div>' : '')
+            );
+          })
+          .join('');
+        html +=
+          '<div class="usage-ev"><div class="t">' + esc(time) + '</div><div class="tt">' + titles +
+          '<div class="meta2"><span class="src">' + (r.source === 'batch' ? '批量' : '单张') + '</span>' +
+          esc(r.model || '—') + (r.sku ? ' · ' + esc(r.sku) : '') +
+          (r.elapsedMs ? ' · ' + (r.elapsedMs / 1000).toFixed(1) + 's' : '') +
+          '</div></div></div>';
+      });
+    });
+    detail.innerHTML = html;
+    wireUsageClose();
+  }
+
+  function wireUsageClose() {
+    var btn = $('usageClose');
+    if (btn) {
+      btn.addEventListener('click', function () {
+        $('usageDetail').classList.add('hidden');
+      });
+    }
+  }
+
   function showPanel() {
     loginCard.classList.add('hidden');
     if ($('loginDl')) $('loginDl').classList.add('hidden');
     if ($('dlWrap')) $('dlWrap').hidden = false;
     panel.classList.remove('hidden');
     $('logoutBtn').hidden = false;
+    loadUsage();
   }
   var loginMode = 'account';
   function setLoginMode(mode) {
@@ -610,6 +745,8 @@ export function renderAdminPage() {
     loadAccounts().catch(function (e) { showNotice($('listNotice'), e.message, true); });
   });
   $('logoutBtn').addEventListener('click', logout);
+  var usageRefreshBtn = $('usageRefresh');
+  if (usageRefreshBtn) usageRefreshBtn.addEventListener('click', function () { loadUsage(); });
 
   async function loadHeaderDownloads() {
     var menu = $('dlMenu');
